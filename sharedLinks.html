@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en" data-bs-theme="dark">
+    <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <link href="//cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-KK94CHFLLe+nY2dmCWGMq91rCGa5gtU4mk92HdvYe+M/SXH301p5ILy+dN9+nJOZ" crossorigin="anonymous">
+    <link href="//cdnjs.cloudflare.com/ajax/libs/jquery-contextmenu/2.7.1/jquery.contextMenu.min.css" rel="stylesheet" integrity="sha384-e1oFNY6Mg1Rpt8PCEzouDgXgXpHfnUM9/Y4NMAdO6QMfRdU5ST3JhGvJwALP7rAt" crossorigin="anonymous">
+    <link href="//cdn.datatables.net/2.0.2/css/dataTables.dataTables.min.css" rel="stylesheet" integrity="sha384-zUxWDVAcow8yNu+q4VFsyZA3qWsKKGdWPW0SVjaR12LQze4SY8Nr75US6VDhbWkf" crossorigin="anonymous">
+    <link href="//cdn.datatables.net/2.0.2/css/dataTables.bootstrap5.min.css" rel="stylesheet" integrity="sha384-9QBtvcG80Q09AwErJKk1x+MJ0cD848QW1DyF1ix+w1g23PIKeT3P7qiLWNylrstY" crossorigin="anonymous">
+    <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/bootstrap-toaster@5.2.0-beta1.1/dist/css/bootstrap-toaster.min.css" integrity="sha384-gb6kU9q2KNWm8OcvhJ/YEPRIakjj9n+3kXiCk499s3u+jCMxGcUYEqxQ0pQ2tDgG" crossorigin="anonymous">
+    <link href="shareLinks.ico" rel="icon" type="image/x-icon">
+    <style>
+h1,th{
+    text-decoration:underline;
+    font-family:cursive
+}
+th{
+    font-size:45px
+}
+h1{
+    font-size:54px
+}
+td{
+    white-space:nowrap
+}
+#dt-search-0{
+    width:200%
+}
+td:not(.sharedLink){
+    cursor:zoom-in
+}
+td.timestamp{
+    cursor:url('//www.dockapps.net/img/wmclock.png'),auto
+}
+.active{
+    background:#8b8000
+}
+.check{
+    color:#0fff50
+}
+.unseen{
+    color:#f0f
+}
+#rss-icon{
+    width:45px;
+    height:45px;
+    position:absolute;
+    top:0;
+    right:0
+}
+#atom-icon{
+    width:45px;
+    height:45px;
+    position:absolute;
+    top:45px;
+    right:0
+}
+img.rounded{
+    width:80vw;
+    height:80vh
+}
+div.spinner-border{
+    position:absolute;
+    top:0;
+    right:50px
+}
+</style>
+<title> Links I've shared</title>
+</head>
+<body>
+    <div id="alert"></div>
+    <ul class="nav">
+        <li class="nav-item active"><a href="#" id="tbl" class="nav-link"> Table</a></li>
+        <li class="nav-item"><a class="nav-link" id="visuals" href="#"> Images</a></li>
+        <li class="nav-item"><a href="https://units.d8u.us/links?fmt=rss"><img src="https://upload.wikimedia.org/wikipedia/commons/4/46/Generic_Feed-icon.svg" id="rss-icon" title="RSS Feed" alt="RSS"></a><a href="https://units.d8u.us/links?fmt=atom"><img src="https://upload.wikimedia.org/wikipedia/commons/4/46/Generic_Feed-icon.svg" id="atom-icon" title="ATOM Feed" alt="ATOM"></a></li>
+     </ul>
+     <div class="jumbotron text-center">
+        <div class="spinner-border" role="status">
+            <span class="visually-hidden"> Loading...</span>
+         </div>
+      <h1>Shared Links, as of <span id="date"></span></h1>
+      </div>
+      <div class="container-full" id="tbl">
+        <h3> A green <span class="check"> &#x2713;</span> indicates whether a link has been clicked; if not, <span class="check unseen"> &#x2713;</span> will be shown, as of above time.<br> Clicking the date <a id="sampleToast" href="#"> will show you the current page title</a> .</h3>
+        <div class="text-center text-muted">
+        Hit "/" to show search bar, escape to close, "i" for visuals, "r" to reload this page, and "t" to return to the table</div>
+        <table class="table">
+        <thead>
+        <tr><th>Recipient</th><th>Date</th><th>Link</th></tr></thead>
+        <tbody class="text-white"></tbody>
+        </table>
+        </div>
+        <div id="images" class="container-full position-absolute top-50 start-50 translate-middle"></div>
+        <div class="text-center footer"> Designed, engineered and developed by Hasan Diwan<br><span class="text-muted"> Loaded in <span id="time"></span> miliseconds</span></div>
+        <script src="//cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+        <script src="//cdnjs.cloudflare.com/ajax/libs/luxon/3.4.4/luxon.min.js" integrity="sha512-dUlSLLkxslGILhPdCkALwk4szPhp3xmZIKFtlUD+O9Lslq41Aksmdt5OGqpomDoT4FsCUH70jQU8ezZHI3v1RQ==" crossorigin="anonymous"></script>
+        <script src="//cdn.jsdelivr.net/npm/mousetrap@1.6.5/mousetrap.min.js" integrity="sha384-ua6PqP0suS84Rz8RHj5WivrFuM5x4mztE5J+cD0inKGylVb8iol6np9bU4rgafRS" crossorigin="anonymous"></script>
+        <script src="//cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ENjdO4Dr2bkBIFxQpeoTz1HIcje39Wm4jDKdf19U8gI4ddQ3GYNS7NTKfAdVQSZe" crossorigin="anonymous"></script>
+        <script src="//cdn.jsdelivr.net/npm/bootstrap-toaster@5.2.0-beta1.1/dist/umd/bootstrap-toaster.min.js" integrity="sha384-HQRV0REPKNAI6Fiib5EsQLV67vjBT1k6UQ5rLjJwCpp4j3F5nH+nXsVb4mzj9qk9" crossorigin="anonymous"></script>
+        <script src="//cdn.datatables.net/2.0.2/js/dataTables.min.js" integrity="sha384-A0y8TjgNQF/hT5LZnO7Nj/yjeiCAvMxCuPkPeQIEPz+Fu2Zv0lvusugdMUB/OJ9w" crossorigin="anonymous"></script>
+        <script src="//cdn.datatables.net/2.0.2/js/dataTables.bootstrap.min.js" integrity="sha384-DQm2FhvMNDh7kUs8dPm0Qj8shP/w5OXSopwGqUzdKYWPE4PXvG1CGLa0yBSMeLqo" crossorigin="anonymous"></script>
+        <script>
+$(document).ready((function(){start=luxon.DateTime.now().valueOf(),new URL(window.location.href).searchParams.has("error")&&$("div#alert").text(new URL(window.location.href).searchParams.get("error")).addClass("alert").addClass("alert-warning").attr("role","alert"),$(".d-flex").show(),$(".nav-link").click((function(){$(".nav-item").removeClass("active"),$(this).parent().addClass("active")})),$("a#tbl").click((function(){$("div#images").hide(),$("div#tbl").show()})).click(),$("a#visuals").click((function(){$("div#tbl").hide(),$("div#images").show()})),$("a#sampleToast").click((function(){$("div.spinner-border").show(),$("tr:has(th)").css("border","2px solid yellow"),Toast.create({title:"Page title will go here",message:"Time to load in nanoseconds"}),$("tr:has(th)").css("border","0px"),$("div.spinner-border").hide()})).css("text-decoration","none"),$("#date").text(luxon.DateTime.now().toFormat("MMMM dd, yyyy 'at' HH:mm:ss")),$("title").text($("h1").text()),$("table.table").hide(),Toast.enableQueue(!1),$.getJSON("//units-helper.d8u.us/today.json",{all:1}).done((function(t){$.each(t.reverse(),(function(t,e){$("tbody").append("<tr><td> "+e[1]+'</td><td class="timestamp"><span class="text-muted">'+e[4]+'</span><span class="relative"></span></td><td><span class="check"> &#x2713 </span><a target="_new" href="'+e[2]+'" class="sharedLink"><img src="sharedLink.png" alt="'+$("tr").length+'"/></a></td></tr> '),$('img[src="sharedLink.png"]').css('height', $('tbody').css('font-size')).css('width', $('tbody').css('font-size')),e[3]> 1?$(".check").last().attr("title","Clicked "+e[3]+" times"):$(".check:last").attr("title","Clicked "+e[3]+" time").addClass("unseen"),$(".timestamp:last").click((function(){$("div.spinner-border").show(),$(this).parent().css("border","2px solid yellow"),$.getJSON("//units-helper.d8u.us/web?notify=1&url="+$(this).next().children().last().attr("href")).done((function(t){Toast.create({title:t.title,message:t.time+" nanoseconds"}),$(this).parent().css("border","0px"),$("tr").css("border","0"),$("div.spinner-border").hide()}))})),0===e[3]&&$(".check:last()").css("color","#ff00ff"),$("div.spinner-border").hide()})),$(".d-flex").remove(),$("table").DataTable({autoFill:!0,layout:{topStart:"search",topEnd:null},fixedHeader:!0,paging:!1,language:{search:""},colReorder:{order:[3,2]},columnDefs:[{target:0,visible:!1,searchable:!0},{target:3,visible:!1}]}).order([3,"desc"]).draw(),$("th").first().click().click(),$("table").css("display","block !important").width((function(){return $("div.container-full").width()})).css("border",0).show(),$('td:not(".timestamp")').css("width",(function(){return $("body").width-$(this).prev().width()})),$("tbody > tr").css("outline","thin solid rgb(34,37,41)"),$(".sharedLink").css("text-overflow","ellipsis"),$(".input-sm").hide(),$("label").show().click((function(){$("input.input-sm").show()})).click(),Mousetrap.bind("r",(function(){window.location.reload()})).bind("esc",(function(){$(".input-sm").click().val("Filter here"),$("#toastContainer > div > div.toast-header > button").click()})).bind("/",(function(){$(".input-sm").show().click((function(){$(".input-sm").hide(),$("label").show()})).trigger().focus((function(){$(".input-sm").val("")})),$(".dt-search").css("display","block !important").css("width",(function(){return $("div#jumbotron").css("width")})),$("#dt-search-0").css("width","200%").css("box-sizing","border-box").val("Filter Results").submit((function(){$(".input-sm").hide(),$("label").show()})),$("label").hide()})).bind("i",(function(){$("#visuals").click()})).bind("t",(function(){$("#tbl").click()})),$("span.relative").each((function(){$(this).html(" (&#8776; "+luxon.DateTime.fromISO($(this).prev().text()).toRelative()+")"),$(this).prev().text(luxon.DateTime.fromISO($(this).prev().text()))})),$("td > span.text-muted").each((function(t,e){$(this).text($(this).text().replace("T"," ").substring(0,$(this).text().lastIndexOf("-")))})),$("#time").text(luxon.DateTime.local().toMillis()-luxon.DateTime.fromMillis(start))})),$.getJSON("//units-helper.d8u.us/hist").done((function(t){$("div#images").html('<img src="'+t.hourly+'" class="rounded mx-auto d-block img-fluid" title="'+t.time+' seconds"/> ').click((function(){switch($("img.rounded").attr("src")){case t.hourly:$("img.rounded").attr("src",t.am2pm);break;case t.am2pm:$("img.rounded").attr("src",t.weekly);break;case t.weekly:$("img.rounded").attr("src",t.monthly);break;case t.monthly:$("img.rounded").attr("src",t.hourly)}})),Mousetrap.bind("[",(function(){$("div#images").click()})).bind("]",(function(){$("div#images").click()}))}))}))
+</script>
+</body>
+</html>

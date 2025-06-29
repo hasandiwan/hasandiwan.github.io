@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css" integrity="sha384-xOolHFLEh07PJGoPkLv1IbcEPTNtaed2xpHsD9ESMhqIYd0nLMwNLD69Npy4HI+N" crossorigin="anonymous">
+    <style>
+th { text-decoration: underline; }
+    </style>
+
+    <title>World Time</title>
+  </head>
+  <body class="bg-dark text-light">
+    <div class="conatainer-xl bg-dark text-light"  id="home">
+    <h1>Local time is <span id="requestedTime"></span></h1>
+    </div>
+    <select></select>
+    <script src="//code.jquery.com/jquery-3.5.1.min.js" integrity="sha384-ZvpUoO/+PpLXR1lu4jmpXWu80pZlYUAfxl5NsBMWOEPSjUn/6Z/hRTt8+pR6L4N2" crossorigin="anonymous"></script>
+    <script src="//cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-Fy6S3B9q64WdZWQUiU+q4/2Lc9npb8tCaSX9FK7E8HnRr0Jz8D6OP9dO5Vg3Q9ct" crossorigin="anonymous"></script>
+    <script src="//momentjs.com/downloads/moment.min.js" integrity="sha384-jzJ+sNWbKe71gDLLfQKgdtslQjhK70oKLFN+wmwxyg6mQN7Vem+wzce4pryF0HP/" crossorigin="anonymous"></script>
+    <script src="//momentjs.com/downloads/moment-timezone-with-data.min.js" integrity="sha384-vh7+HsAEt855u+KHx5aMqAyFV8Z7zTb8Qfo0mvg/CUFy+PZFKCC5IZz73lQNYCXK" crossorigin="anonymous"></script>
+    <script>
+$(document).ready(function() {
+    $('#requestedTime').text(moment().format('MMMM Do YYYY, h:mm:ss a '))
+    $('select').click(function(t) { $('h1').text('Processing....');$('h1').text('Time in '+$('select').val().replace(/ /g, '_')+' is most likely '+moment().tz($('select').val()).format('MMMM Do YYYY, h:mm:ss a')) })
+    $.each(moment.tz.names(), function(i, o) {
+        $('select').append('<option val="'+o+'">'+o.replace(/_/g, ' ')+'</option>')
+    })
+})
+</script>
+  </body>
+</html>

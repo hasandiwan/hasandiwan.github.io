@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Venues near you</title>
+    <link href="//cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+    <style>
+th { text-decoration: underline; }
+.arrow { display: inline-block; }
+.container { position: relative;}
+#currentConditions { position: absolute; right: -1%; }
+    </style>
+  </head>
+  <body data-bs-theme="dark">
+    <div class="container">
+    <span id="currentConditions" class="position-absolute top-0"></span>
+        <p><span class="text-muted">Muted text</span> indicates the venue is reported as closed, as of <span id="time"></span> local time.</p>
+        <table class="table">
+            <thead>
+                <tr><th>Venue</th><th>Distance/Bearing</th><th>Address (Clickable Phone #)</th></tr>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
+    </div>
+    <script src="//cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+    <script src="//cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/luxon/3.4.4/luxon.min.js" integrity="sha512-dUlSLLkxslGILhPdCkALwk4szPhp3xmZIKFtlUD+O9Lslq41Aksmdt5OGqpomDoT4FsCUH70jQU8ezZHI3v1RQ==" crossorigin="anonymous"></script>
+    <script>
+$(document).ready(function() {
+    if (!('geolocation' in navigator)) {
+        $('#container').text('No, you need to enable location services for this page to do anything useful')
+        return
+    }
+    $('#time').text(luxon.DateTime.local().toSQL({includeOffset: false}))
+    navigator.geolocation.getCurrentPosition(function(position){
+        $.getJSON('//units-helper.d8u.us/weather', {latitude: position.coords.latitude, longitude: position.coords.longitude}).done(function(d) { $('#currentConditions').html('<img src="'+d.conditions+'"/>').attr('title', d.tempF+' F/'+d.tempC+' C').click(function() { loc = window.location.href.replace('nearby.html', 'weather.html');window.open(loc);return false})})
+        $.getJSON('//units.d8u.us/nearme?latitude='+ position.coords.latitude+'&longitude='+position.coords.longitude).done(function(response) {
+            $.each(response.venues, function(i, venue) {
+                $('tbody').append('<tr><td class="venue"><a class="link" href="'+venue.url+'">'+venue.venue+'</a></td><td><span id="distance"><a href="#" title="&#8773;  &#8593;">'+venue.distance+'</a></span><span class="arrow">&uarr;</span></td><td>'+venue.streetAddress+' (<a href="telno:'+venue.phoneNumber+'">'+venue.phoneNumber+'</a>)</td></tr>')
+                if ($('.link').last().attr('href') === 'null') {  $('tr:last > td').first().text($('.link').last().text()) }
+                $('.arrow').last().css('transform', 'rotate('+venue.bearing+'deg)').attr('title', venue.bearing+' degrees from north')
+                if (!venue.isOpen) { $('tr:last > td').addClass('text-muted') }
+                $('tr:last').html($('tr:last').html().replace('(<a href="telno:null">null</a>)', ''))
+        })
+    }) })
+})
+    </script>
+  </body>
+</html>

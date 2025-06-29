@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title></title>
+    </head>
+    <body>
+        <div id="first"></div>
+        <script src="https://unpkg.com/jquery@3.3.1/dist/jquery.min.js" integrity="sha384-tsQFqpEReu7ZLhBV2VZlAu7zcOV+rXbYlF2cqB8txI/8aZajjp4Bqd+V6D5IgvKT" crossorigin="anonymous"></script>
+        <script src="https://unpkg.com/@ungap/url-search-params@0.1.2/index.js" integrity="sha384-nFAEdBqmyAbvN1AIKLODzcGP+ug07pHcDfIpyB6A2kTakMbuznuhwq5z/bU9cVuf" crossorigin="anonymous"></script>
+        <script src="https://unpkg.com/jstimezonedetect@1.0.6/dist/jstz.js" integrity="sha384-S6HBq17cdF3GGfgpziWjMfy2+YydRIO7m1zt3h/96SsdVelPagt8sQ5K5qQVSiK7" crossorigin="anonymous"></script>
+        <script>
+            var getUrlParameter = function getUrlParameter(sParam) {
+                var sPageURL = window.location.search.substring(1),
+                    sURLVariables = sPageURL.split('&'),
+                    sParameterName,
+                    i;
+
+                for (i = 0; i < sURLVariables.length; i++) {
+                    sParameterName = sURLVariables[i].split('=');
+
+                    if (sParameterName[0] === sParam) {
+                        return sParameterName[1] === undefined ? true : decodeURIComponent(sParameterName[1]);
+                    }
+                }
+            };
+$(document).ready(function() {
+    urlParams = new URLSearchParams(window.location.search);
+    if (!urlParams.has('number')) {
+        $('#first').text('Missing number parameter');
+    } else {
+        for (i = 0; i != getUrlParameter('number').length(); i++) {
+        }
+    }
+});
+        </script>
+    </body>
+</html>

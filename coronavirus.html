@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.6.0/leaflet.css" integrity="sha384-eS4bw6aEvhCSXWGP85ANR/N8isWKzT7P36NvcuTJGkrj6wsbxLVpXslrNXYHyseD" crossorigin="anonymous">
+<style>
+td:hover { background-color:cyan;}
+#map{
+</style>
+    <title>Covid19 around the World!</title>
+  </head>
+  <body>
+      <div class="container-full">
+          <table class="table table-bordered table-hover table-striped table-responsive">
+            <tr><th>Country Name</th><th>Number of Corona Virus Cases</th></tr>
+        	</table>
+        <caption>Current as of <span id="date"></span>. Source is the <a href="https://www.ecdc.europa.eu/en">European Centres for Disease Prevention and Control</a>, and turned into <a href="https://hd1-units.herokuapp.com/covid">JSON</a> in real-time using my hand-crafted code.</caption>
+	Map of where cases are found.
+		<div id="map"></div>
+      </div>
+    <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js" integrity="sha384-vk5WoKIaW/vJyUAd9n/wmopsmNhiy+L2Z+SBxGYnUkunIxVxAv/UtMOhba/xskxh" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.6.0/leaflet.js" integrity="sha384-wKOriz2x8/bF1D9t6PuKhSpxfhHeVi9huvyuxJrrShSJpi5+rmRIsM90UuWbdAYJ" crossorigin="anonymous"></script>
+    <script>
+        $(document).ready(function() {
+            $.getJSON('//hd1-units.herokuapp.com/covid').done(function(d) { 
+                $('#date').text(d.date);
+                $.each(d, function(i, element) { 
+                    if (i !== 'date') {
+                        $('table').append('<tr><td>'+i+'</td><td>'+parseInt(element)+'</tr>');
+                    }});
+		    var map = L.map('map', {
+		      layers: MQ.mapLayer()
+		    });
+
+		    MQ.geocode({ map: map }).search(i);
+	    });
+        });
+    </script>
+  </body>
+</html>

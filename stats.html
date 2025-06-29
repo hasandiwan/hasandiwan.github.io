@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Convert JSON Data to HTML Table</title>
+<style>
+th, td, p, input {
+font:14px Verdana;
+}
+table, th, td 
+{
+border: solid 1px #DDD;
+border-collapse: collapse;
+padding: 2px 3px;
+text-align: center;
+}
+th {
+font-weight:bold;
+}
+</style>
+</head>
+<body>
+<textarea id="numbers"></textarea>
+<button onclick="CreateTableFromJSON()">Go</button>
+<div id="showData"></p>
+</body>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js" integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0=" crossorigin="anonymous"></script>
+<script>
+function CreateTableFromJSON() {
+    $.post('//hd1-vis.herokuapp.com/stats', $('#numbers').val(), function(resp) {
+
+        var myBooks = resp;
+        // EXTRACT VALUE FOR HTML HEADER
+        var col = [];
+        for (var i = 0; i < myBooks.length; i++) {
+            for (var key in myBooks[i]) {
+                if (col.indexOf(key) === -1) {
+                    col.push(key);
+                }
+            }
+        }
+    
+        // CREATE DYNAMIC TABLE.
+        var table = document.createElement("table");
+    
+        // CREATE HTML TABLE HEADER ROW USING THE EXTRACTED HEADERS ABOVE.
+    
+        var tr = table.insertRow(-1);                   // TABLE ROW.
+    
+        for (var i = 0; i < col.length; i++) {
+            var th = document.createElement("th");      // TABLE HEADER.
+            th.innerHTML = col[i];
+            tr.appendChild(th);
+        }
+    
+        // ADD JSON DATA TO THE TABLE AS ROWS.
+        for (var i = 0; i < myBooks.length; i++) {
+            tr = table.insertRow(-1);
+            for (var j = 0; j < col.length; j++) {
+                var tabCell = tr.insertCell(-1);
+                tabCell.innerHTML = myBooks[i][col[j]];
+            }
+        }
+
+        // FINALLY ADD THE NEWLY CREATED TABLE WITH JSON DATA TO A CONTAINER.
+        var divContainer = document.getElementById("showData");
+        divContainer.innerHTML = "";
+        divContainer.appendChild(table);
+    });
+}
+</script>
+</html>
+

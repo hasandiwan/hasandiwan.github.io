@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <!-- Required meta tags -->
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+        <!-- Bootstrap CSS -->
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+
+        <title>Summarize a news piece</title>
+    </head>
+    <body>
+        <iframe id="people"></iframe>
+        <iframe id="place"></iframe>
+        <iframe id="organizations"></iframe>
+        <iframe id="summary"></iframe>
+        <iframe id="link"></iframe>
+        <form>
+            URL to summarize: <input id="url" type="text"><br/><input type="submit"></input><input type="reset" label="clear form"></input>
+        </form>
+
+        <!-- Optional JavaScript -->
+        <!-- jQuery first, then Popper.js, then Bootstrap JS -->                                                                                                           <script src="https://code.jquery.com/jquery-3.4.1.min.js" integrity="sha384-vk5WoKIaW/vJyUAd9n/wmopsmNhiy+L2Z+SBxGYnUkunIxVxAv/UtMOhba/xskxh" crossorigin="anonymous"></script>                                                                                                                                                       <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>                                                                                                                              <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
+        <script>
+            $(document).ready(function() {
+                if ($('#url').text().startswith('http')) {
+                    $.post('//hd1-units.herokuapp.com/summary', {'length': '3', 'url': $('#url').text()}).done(function(res) { $('#summary').text(res.summary); })}});
+        </script>
+    </body>
+</html>
+

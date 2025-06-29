@@ -1,0 +1,41 @@
+<!doctype html>
+<meta charset="utf-8">
+<style> /* set the CSS */
+
+rect.bar { fill: steelblue; }
+
+</style>
+<body>
+    <div id="viz"></div>
+    <div id="linksTbl"></div>
+    <!-- load the d3.js library -->     
+    <script src="//d3js.org/d3.v4.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/d3-time-format/2.1.1/d3-time-format.min.js" integrity="sha384-cV+UVh1fewxYgADHl66JZYtn4ikYvn/KVEgy9CbVce8eylaBlBMTRUTq81mBpyo5" crossorigin="anonymous"></script>
+    <script src="//code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
+    <script>
+d3.csv("//hd1-logging.herokuapp.com/data.csv", function(error, data) {
+    if (error) throw error;
+    // format the data
+    data.shift(); // drop the header
+    var margin = {top: 10, right: 30, bottom: 30, left: 40};
+    hours = [];
+    for (i = 0; i != 24; i++) { hours[i] = 0; }
+    data.forEach(function(d) {
+        hours[d3.isoParse(d.Timestamp.replace(' ', 'T')).getHours()]++;
+    });
+    var histogram = d3.histogram().thresholds(24);
+    // group the data for the bars
+    var bins = histogram(hours);
+    var svg = d3.select("div").append("svg").attr('width', 400).attr('height', 600).append('g').attr('transform', 'translate(20, 0)');
+    var x = d3.scaleLinear().range([400]);
+    var y = d3.scaleLinear().range([600]);
+    svg.selectAll('rect').data(bins).enter().append('rect').attr('class','bar').attr('x', 1).attr('width', function(d) { return x(d.x1)-x(d.x0)-1;}).attr('height', function(d) { return 600-y(d.length);});
+    svg.append('g').attr("transform", "translate(0," + (500 - margin.top - margin.bottom)+ ")").call(d3.axisBottom(x));
+    svg.append('g').call(d3.axisLeft(y));
+    $.each( data.items, function( i, item ) {
+        $('tbody').append('<tr><td>'+d3.isoParse(item[0].replace(' ', 'T'))+'</td><td><a href="'+item[1]+'">'+item[1]+'</a></td></tr>');
+    });
+});
+    </script>
+</body>
+</html>

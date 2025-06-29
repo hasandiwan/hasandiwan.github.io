@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html data-bs-theme="dark" lang="en">
+<head>
+<style>
+td:nth-child(3n-2) { text-transform: capitalize; }
+.table { width: inherit; }
+</style>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>
+Units' /random user interface</title>
+<link href="//cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+</head>
+<body>
+<div class="container">
+<div class="jumbotron">
+This is a simple user-interface for the JSON yielded by <a href="https://units.d8u.us/random">this endpoint</a>. Vary the length of the string by moving the slider.</div>
+<table class="table">
+<thead>
+<tr>
+<th>
+Type</th>
+<th>
+Value</th>
+<th>
+Copy to clipboard</th>
+</tr>
+</thead>
+<tbody>
+</tbody>
+</table>
+<div class="footer">
+Length of string: <input type="range" class="form-range" min="1" max="22" step="1" id="customRange1"><br/>
+<figcaption class="blockquote-footer text-muted">These results are entirely random. Any resemblance to actual persons, living or dead, actual locations, or actual events is purely coincidental.</figcaption>
+Designed, developed, and deployed by <a href="mailto:hasandiwan+randomui@gmail.com">Hasan Diwan</a>.
+</div>
+</div>
+<script src="//code.jquery.com/jquery-3.6.4.min.js" integrity="sha384-UG8ao2jwOWB7/oDdObZc6ItJmwUkR/PfMyt9Qs5AwX7PsnYn1CRKCTWyncPTWvaS" crossorigin="anonymous">
+</script>
+<script src="//cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous">
+</script>
+<script>
+$(document).ready(function() { $.getJSON('//units-helper.d8u.us/random', {length: parseInt($('#customRange1').val())}).done(function(e) { $.each(Object.entries(e), function(idx, val) { if (val[0] !== 'time') { $('tbody').append('<tr> <td> '+val[0]+'</td> <td> '+val[1]+'</td> <td> <button> Copy</button> </td> </tr> ');$('button').last().click(function() { navigator.clipboard.writeText($(this).parent().prev().text());$('button').each(function(index, value) { $(this).text('Copy') });$(this).text('Copied!') }) } }) });$('input').change(function() {$('td:last()').prev().text($.getJSON('//units-helper.d8u.us/random', {length:parseInt($('#customRange1').val())}).done(function(r){$('body > div.container > table > tbody > tr:nth-child(12) > td:nth-child(2)').text(r.string)}))}) }) 
+</script>
+</body>
+</html>
+

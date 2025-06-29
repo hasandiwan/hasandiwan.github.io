@@ -1,0 +1,45 @@
+<html lang="en">
+    <head>
+        <!-- Required meta tags -->
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+        <!-- Bootstrap CSS -->
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.5/leaflet.min.css" integrity="sha256-ncvM02qrAQC9gR91e9QBLZPQca2AX2W1kpbxa/otaD4=" crossorigin="anonymous" />
+        <!--[if lte IE 8]>
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.5/leaflet.ie.min.css" integrity="sha256-msKEVtDOMBb4329/RXduSM6FXRylp9Syul/EAqZ1Aho=" crossorigin="anonymous" />
+        <![endif]-->
+        <title>Latest Earthquakes</title>
+    </head>
+    <body>
+        <h1><a href="https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_hour.atom">Earthquakes in the last hour</a></h1>
+        <div id="map"></div>
+        <!-- Optional JavaScript -->
+        <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+        <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.5/leaflet.min.js" integrity="sha256-D1+RjSz/SzQ2lHJ0DIerk5ZAOgO9f08v1UtEZDiehHc=" crossorigin="anonymous"></script>
+        <script>
+            $(document).ready(function() {
+                var mymap = L.map('map').setView([0,0], 0);
+                $.get($('a').attr('href'), function(d) {
+                    xmlDoc = $.parseXML(d);
+                    xml = $( xmlDoc );
+                    L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}', {
+                        attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
+                        id: 'mapbox.streets',
+                        accessToken: 'pk.eyJ1IjoiaGRpd2FuIiwiYSI6ImNqYm42aDFyOTU1b2Qyd21yNHAzZ2dzeTYifQ.sEHab45gLwG4IP8_VIbVag'
+                    }).addTo(mymap);
+                    items = xml.find('item').each(function() {
+                        console.log('Found items');
+                        pts = $(this).find('georss:point').split(' ');
+                        size = $(this).find('category[label=magnitude]').attr('term');
+                        var circle = L.circle([''+pts[0]+','+pts[1]], { color: 'red', fillcolor: '#f03', fillopacity: 0.25, radius: parseInt(size.replace('Magnitude ',''))}).addTo(map);
+                    });
+                });
+            });
+        </script>
+    </body>
+</html>
