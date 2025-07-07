@@ -68,9 +68,8 @@
         }).addTo(t),
         $('#time').text(luxon.DateTime.now().setZone(Intl.DateTimeFormat().resolvedOptions().timeZone).toFormat("hh:mm a 'on' MMMM dd, yyyy"))
         markers = L.featureGroup()
-          $.getJSON("//units.d8u.us/loc/0,0?m="+ new Date().getTimezoneOffset()*-1).done(function(m) {
-	    // [{"results":[{"latitude":34.0541058,"longitude":-118.4632713,"logged_on":"2025-06-21T22:10:18"}]}]
-	    console.log(m)
+        $.getJSON("//units.d8u.us/loc/0,0?m="+ new Date().getTimezoneOffset()*-1).done(function(m) {
+	        console.log(m)
             $.each(m.results, function(i,e) {
                 $('#ago').text('and my picture shows where I was...')
                 L.marker([e.latitude, e.longitude], {
