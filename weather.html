@@ -14,31 +14,29 @@
   <body>
     <div style="display: table; position: absolute; height: 100%; width: 100%;">
       <div style="display: table-cell; vertical-align: middle;">
-	<div style="margin-left: auto; margin-right: auto;">
-	  <div class="progress">
-	    <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 100vw"></div><br/>
-	  </div>
-	  <div class="text-start">Loading, please wait...</div>
-	  <div id='main'> 
-	    <div class="container-full text-center">
-	      <h1>Weather at <a id="maplink" title="where we think you are"><span id="latitude"></span>&deg;, <span id="longitude"></span>&deg;</a></h1>
-              <div class="jumbotron"><span class="conditions"></span></div>
-              <div class="toast" role="alert" aria-live="assertive" aria-atomic="true">
-		<div class="toast-header">
-		  <strong id="jumbotron" class="me-auto"></strong>
-		</div>
-	      </div>
-	      <div class="footer">
-		Designed, engineered and developed by <span class="text-muted"><a href="mailto:hasandiwan+weather.html@gmail.com">Hasan Diwan</a></span><br>Loaded in <span class="text-white" id="time"></span> miliseconds</span>
-</div>
-<div class="toast" role="alert" aria-live="assertive" aria-atomic="true">
-  <div class="toast-header">
-    <strong id="footer" class="me-auto"></strong>
-  </div>
-</div>
-</div>
-</div>
-</Div>
+	     <div style="margin-left: auto; margin-right: auto;">
+	        <div class="progress">
+	        <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 100vw"></div><br/>
+	     </div>
+	        <div class="text-start">Loading, please wait...</div>
+	        <div id='main'> 
+	            <div class="container-full text-center">
+	                <h1>Weather at <a id="maplink" title="where we think you are"><span id="latitude"></span>&deg;, <span id="longitude"></span>&deg;</a></h1>
+                    <div class="jumbotron"><span class="conditions"></span></div>
+                    <div class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+		                <div class="toast-header">
+		                    <strong id="jumbotron" class="me-auto"></strong>
+		                </div>
+	                </div>
+	            <div class="footer">Designed, engineered and developed by <span class="text-muted"><a href="mailto:hasandiwan+weather.html@gmail.com">Hasan Diwan</a></span><br>Loaded in <span class="text-white" id="time"></span> miliseconds</span></div>
+                <div class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+                    <div class="toast-header">
+                        <strong id="footer" class="me-auto"></strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+   </div>
 </div>
 <script src="//code.jquery.com/jquery-3.6.4.min.js" integrity=sha384-UG8ao2jwOWB7/oDdObZc6ItJmwUkR/PfMyt9Qs5AwX7PsnYn1CRKCTWyncPTWvaS crossorigin=anonymous></script>
 <script src="//cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ENjdO4Dr2bkBIFxQpeoTz1HIcje39Wm4jDKdf19U8gI4ddQ3GYNS7NTKfAdVQSZe" crossorigin="anonymous"></script>
@@ -80,8 +78,8 @@
 	  }, function(e) {
 	      $('div:not(.jumbotron)').hide()
 	      $('.jumbotron').text('Location access denied').addClass([ 'alert', 'alert-danger'])
-	  })
-      })
+	  }, function() { document.getElementsByTagName('body')[0].innerHTML='<h1>Can not use without location access</h1>'; }) }
+   })
 </script>
 </body>
 </html>
