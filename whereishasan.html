@@ -67,8 +67,8 @@
 	  navigator.geolocation.getCurrentPosition(e=>{
 	      L.marker([e.coords.latitude, e.coords.longitude]).bindPopup('Your current location').addTo(t)
 	  })
-          $('#time').text(luxon.DateTime.now().setZone(Intl.DateTimeFormat().resolvedOptions().timeZone).toFormat("hh:mm a 'on' MMMM dd, yyyy"))
-          $.getJSON("//units.d8u.us/loc/0,0?m="+ new Date().getTimezoneOffset()*-1).done(function(m) {
+          $('#time').text(luxon.DateTime.now().toFormat("hh:mm a 'on' MMMM dd, yyyy"))
+	  $.getJSON("//units.d8u.us/loc/0,0?m="+ new Date().getTimezoneOffset()*-1).done(function(m) {
 	      $.each(Object.entries(m.results).sort(function (a, b) { return a.loggedOn - b.loggedOn }), function(i,e1) {
                   markers.addLayer(L.marker([e1[1].latitude, e1[1].longitude], {
 		      icon: L.icon({
@@ -82,15 +82,21 @@
 				       navigator.geolocation.getCurrentPosition(e=>{
 					   $.getJSON('//units.d8u.us/distance',{point1: ((0+e1['1'].latitude)+','+(0+e1['1'].longitude)), point2: ((0+e.coords.latitude)+','+(0+e.coords.longitude))})
 					       .always(function(d) {
-						   $('#distance').text('We are '+Math.round((0+d.distance)*100)/100+' meters (or '+Math.round(((0+d.distance)*39.37/36)*100)/100+' yards) apart')
+						   if (!Number.isNaN(d.distance)) $('#distance').text('We are '+Math.round((0+d.distance)*100)/100+' meters (or '+Math.round(((0+d.distance)*39.37/36)*100)/100+' yards) apart')
+						   else $('#distance').text("Could not calculate distance").css('text-color','#f00')
 					       })
 				       })
 				   })
-				  )})
+	      )})
 	      t.addLayer(markers).fitBounds(markers.getBounds())
 	  })
 	  $('#loadTime').text(''+(luxon.DateTime.now().ts-start))
-      }))
+      })).on('click', function() {
+	      if ($('#name').val() !== '') {
+		  body = {services: "telegram", status: $('#name').val()+' wants to meet, near '+ e1['1'].latitude + ', '+e1['1'].longitude+' at '+luxon.DateTime.now()+'?'}
+		  $.post('//units.d8u.us/status', body)
+	      }
+      })
     </script>
   </body>
-</html>
+</html
