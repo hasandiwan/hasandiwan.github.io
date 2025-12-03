@@ -45,39 +45,39 @@
       if (navigator.geolocation === undefined) {
           document.getElementsByTagName('body')[0].innerHTML='<h1>Can not use without location access</h1>'
       } else {
-	  $('title').text('Loading')
-	  $('div.progress').show()
-	  $('div:not(.progress,.progress-bar,.text-start)').hide()
-	  navigator.geolocation.getCurrentPosition(function(e) {
-	      $.getJSON('https://units.d8u.us/weather', {zip: e.coords.latitude+', '+ e.coords.longitude}).done(function(data) {
-		  $('#latitude').text(Math.round(parseInt(0+e.coords.latitude*100))/100)
-		  $('#longitude').text(Math.round(parseInt(e.coords.longitude*100))/100)
-		  $('div.container-full').css('background-color', function() { return 'rgb('+parseInt(data.humidity)+'%,0%,0%)' }).attr('title', 'Shade of red indicates relative humidity -- '+data.humidity+'%. Direction of arrow indicates wind azimuth -- '+data.windDirection +'º and wind speed is '+data.windSpeed+' kmph/'+Math.round(data.windSpeed*62.1371)/100+' mph.')
-		  $('div.footer').css('background-color', function() { return 'rgb(0%,0%,'+(100-data.cloudCover)+'%)'}).attr('title', 'Shade of blue indicates cloud cover -- '+data.cloudCover+'%.')
-		  $('#footer').text($('div.footer').attr('title'))
-		  $('.jumbotron').html('<img class="conditions" src="'+data.conditions+'"/> <span id="windDirection">&#x2191;</span> '+luxon.DateTime.local().toSQL({includeOffset: false}).substring(0, luxon.DateTime.local().toSQL({includeOffset: false}).indexOf('.'))+' &mdash; '+data.tempF+'&deg;F/'+data.tempC+'&deg;C</span>').show()
-		  $('.conditions').css('font-size', '4.39vw')
-		  $('.maplink').css('font-size', '0.8rem')
-		  $('a#maplink').attr('href', 'https://www.osmap.asia/#18/'+e.coords.latitude+'/'+e.coords.longitude).attr('target','_new')
-		  $('span#windDirection').css('transform', function() { return 'rotate('+data.windDirection+'deg' +')' } ).css('display', 'inline-block').addClass(['text-white', 'text-start'])
-		  $('#jumbotron').text($('div.container-full').attr('title'))
-		  $('body').click(function() { $('div.toast').toggle() })
-		  $('#time').text(data.time)
-		  $('title').text('Current weather conditions')
-	      }).fail(function(c) {
-		  $('body').css('background-color', '#000').css('color', '#fff').append($('div.container-full').addClass(['jumbotron', 'alert','alert-danger','text-center']).text('Upstream API failed -- '+c.error))
-		  $('div:not(.jumbotron').hide()
-	      }).always(function() {
-		  $('div').hide()
-		  $('div:not(.progress,.text-start,.toast)').show()
-	      })
-	  }, function(e) {
-	      $('hr,div.footer').hide()
-	      $('div.container-full').css('background-color', '#000').css('color', '#fff').append($('div').addClass(['jumbotron', 'alert', 'alert-danger']).text('Location access failed'))
-	  }, function(e) {
-	      $('div:not(.jumbotron)').hide()
-	      $('.jumbotron').text('Location access denied').addClass([ 'alert', 'alert-danger'])
-	  }, function() { document.getElementsByTagName('body')[0].innerHTML='<h1>Can not use without location access</h1>'; }) }
+      $('title').text('Loading')
+      $('div.progress').show()
+      $('div:not(.progress,.progress-bar,.text-start)').hide()
+      navigator.geolocation.getCurrentPosition(function(e) {
+              $.getJSON('https://units.d8u.us/weather', {zip: e.coords.latitude+', '+ e.coords.longitude}).done(function(data) {
+              $('#latitude').text(Math.round(parseInt(0+e.coords.latitude*100))/100)
+              $('#longitude').text(Math.round(parseInt(e.coords.longitude*100))/100)
+              $('div.container-full').css('background-color', function() { return 'rgb('+parseInt(data.humidity)+'%,0%,0%)' }).attr('title', 'Shade of red indicates relative humidity -- '+data.humidity+'%. Direction of arrow indicates wind azimuth -- '+data.windDirection +'º and wind speed is '+data.windSpeed+' kmph/'+Math.round(data.windSpeed*62.1371)/100+' mph.')
+              $('div.footer').css('background-color', function() { return 'rgb(0%,0%,'+(100-data.cloudCover)+'%)'}).attr('title', 'Shade of blue indicates cloud cover -- '+data.cloudCover+'%.')
+              $('#footer').text($('div.footer').attr('title'))
+              $('.jumbotron').html('<img class="conditions" src="'+data.conditions+'"/> <span id="windDirection">&#x2191;</span> '+luxon.DateTime.local().toSQL({includeOffset: false}).substring(0, luxon.DateTime.local().toSQL({includeOffset: false}).indexOf('.'))+' &mdash; '+data.tempF+'&deg;F/'+data.tempC+'&deg;C</span>').show()
+              $('.conditions').css('font-size', '4.39vw')
+              $('.maplink').css('font-size', '0.8rem')
+              $('a#maplink').attr('href', 'https://www.osmap.asia/#18/'+e.coords.latitude+'/'+e.coords.longitude).attr('target','_new')
+              $('span#windDirection').css('transform', function() { return 'rotate('+data.windDirection+'deg' +')' } ).css('display', 'inline-block').addClass(['text-white', 'text-start'])
+                      $('#jumbotron').text($('div.container-full').attr('title'))
+                      $('body').click(function() { $('div.toast').toggle() })
+                      $('#time').text(data.time)
+                      $('title').text('Current weather conditions')
+                      }).fail(function(c) {
+                          $('body').css('background-color', '#000').css('color', '#fff').append($('div.container-full').addClass(['jumbotron', 'alert','alert-danger','text-center']).text('Upstream API failed -- '+c.error))
+                          $('div:not(.jumbotron').hide()
+                      }).always(function() {
+                          $('div').hide()
+                          $('div:not(.progress,.text-start,.toast)').show()
+                      })
+      }, function(e) {
+          $('hr,div.footer').hide()
+          $('div.container-full').css('background-color', '#000').css('color', '#fff').append($('div').addClass(['jumbotron', 'alert', 'alert-danger']).text('Location access failed'))
+      }, function(e) {
+          $('div:not(.jumbotron)').hide()
+          $('.jumbotron').text('Location access denied').addClass([ 'alert', 'alert-danger'])
+      }, function() { document.getElementsByTagName('body')[0].innerHTML='<h1>Can not use without location access</h1>'; }) }
    })
 </script>
 </body>
