@@ -48,7 +48,8 @@
 <script>
   $(document).ready(function() {
       if (navigator.geolocation === undefined) {
-          document.getElementsByTagName('body')[0].innerHTML='<h1>Can not use without location access</h1>'
+          $(document).prop('title','Not so fast')
+          $('body').html('<div class="container-full text-white"><h1>Can not use without location access</h1><br/>As a disclaimer, this page needs your location to get your current weather conditions, along with the time of day.</div>')
       } else {
       $('title').text('Loading')
       $('div.progress').show()
