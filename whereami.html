@@ -1,13 +1,13 @@
 <!doctype html>
 <html data-bs-theme="dark" lang="en">
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="Where was Hasan?">
-    <link rel="stylesheet" href="//unpkg.com/leaflet@1.9.3/dist/leaflet.css" integrity="sha256-kLaT2GOSpHechhsozzB+flnD+zUyjE2LlfWPgU04xyI=" crossorigin="anonymous">
-    <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/bootstrap-toaster@5.2.0-beta1.1/dist/css/bootstrap-toaster.min.css" integrity="sha256-EgpRWNIgOx+CFzC9nQl2oaNw3Lv5OgbsYZp2WG1GNUI=" crossorigin="anonymous">
-    <link href="//cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-KK94CHFLLe+nY2dmCWGMq91rCGa5gtU4mk92HdvYe+M/SXH301p5ILy+dN9+nJOZ" crossorigin="anonymous">
-    <style>
+ <head> 
+  <meta charset="utf-8"> 
+  <meta name="viewport" content="width=device-width, initial-scale=1"> 
+  <meta name="description" content="Where was Hasan?"> 
+  <link rel="stylesheet" href="//unpkg.com/leaflet@1.9.3/dist/leaflet.css" integrity="sha256-kLaT2GOSpHechhsozzB+flnD+zUyjE2LlfWPgU04xyI=" crossorigin="anonymous"> 
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/bootstrap-toaster@5.2.0-beta1.1/dist/css/bootstrap-toaster.min.css" integrity="sha256-EgpRWNIgOx+CFzC9nQl2oaNw3Lv5OgbsYZp2WG1GNUI=" crossorigin="anonymous"> 
+  <link href="//cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-KK94CHFLLe+nY2dmCWGMq91rCGa5gtU4mk92HdvYe+M/SXH301p5ILy+dN9+nJOZ" crossorigin="anonymous"> 
+  <style>
       div.toast-body {
           text-color: white;
           font-weight: 900;
@@ -33,26 +33,34 @@
       #relativetime {
           font-style: italic;
       }
-    </style>
-    <title>Where was I?</title>
-  </head>
-  <body>g
-    <div class="position-absolute end-0 top-0"><button id="kml" style="display:none"><img src="//www.expertgps.com/images/kml256.png" height="15" width="15" alt="kml of markers shown"></img></button></div>
-    <div class="text-center container-fluid jumbotron text-white">
-      You are currently at the blue marker, and my picture shows my location <span id="ago"></span>.
-      &#8230;The page has determined your time to be <span id="time"></span>
-      &#8230;
-    </div>
-    <div class="container-fluid" id="map"></div>
-    <div class="spinner-border text-success" id="progress" role="status"><span class="visually-hidden"></span></div>
-    <div class="text-center footer container-fluid text-info"><span id="distance">Click a marker to show how far apart we were</span>. Loaded in <span id="loadTime"></span> ticks.</div>
-    <script src="//unpkg.com/leaflet@1.9.3/dist/leaflet.js" integrity="sha256-WBkoXOwTeyKclOHuWtc+i2uENFpDZ9YPdf5Hf+D7ewM=" crossorigin=""></script>
-    <script src="//code.jquery.com/jquery-3.6.4.min.js" integrity=sha384-UG8ao2jwOWB7/oDdObZc6ItJmwUkR/PfMyt9Qs5AwX7PsnYn1CRKCTWyncPTWvaS crossorigin=anonymous></script>
-    <script src="//cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ENjdO4Dr2bkBIFxQpeoTz1HIcje39Wm4jDKdf19U8gI4ddQ3GYNS7NTKfAdVQSZe" crossorigin="anonymous"></script>
-    <script src="//cdn.jsdelivr.net/npm/bootstrap-toaster@5.2.0-beta1.1/dist/umd/bootstrap-toaster.min.js" integrity="sha384-bCj4pb4bBON1ySbGsGAMRihVd1NE35xbsqfeomKDJPwPLFatXRpbWz6j1c5IT7i6" crossorigin="anonymous"></script>
-    <script src="//cdn.jsdelivr.net/npm/tokml@0.4.0/tokml.min.js" integrity="sha384-1ZGDfR96PbEIjOT6/yWg3TiZ6jtd9uTrhz6F9gt1qz98Veo6ZHjJRMnQULAZ5lMG" crossorigin="anonymous"></script>
-    <script src="//cdnjs.cloudflare.com/ajax/libs/luxon/3.4.4/luxon.min.js" integrity="sha512-dUlSLLkxslGILhPdCkALwk4szPhp3xmZIKFtlUD+O9Lslq41Aksmdt5OGqpomDoT4FsCUH70jQU8ezZHI3v1RQ==" crossorigin="anonymous"></script>
-    <script>
+    </style> 
+  <title>Where was I?</title> 
+ </head> 
+ <body>
+  g 
+  <div class="position-absolute end-0 top-0">
+   <button id="kml" style="display:none"><img src="//www.expertgps.com/images/kml256.png" height="15" width="15" alt="kml of markers shown"></button>
+  </div> 
+  <div class="text-center container-fluid jumbotron text-white">
+    You are currently at the blue marker, and my picture shows my location 
+   <span id="ago"></span>. …The page has determined your time to be 
+   <span id="time"></span> … 
+  </div> 
+  <div class="container-fluid" id="map"></div> 
+  <div class="spinner-border text-success" id="progress" role="status">
+   <span class="visually-hidden"></span>
+  </div> 
+  <div class="text-center footer container-fluid text-info">
+   <span id="distance">Click a marker to show how far apart we were</span>. Loaded in 
+   <span id="loadTime"></span> ticks.
+  </div> 
+  <script src="//unpkg.com/leaflet@1.9.3/dist/leaflet.js" integrity="sha256-WBkoXOwTeyKclOHuWtc+i2uENFpDZ9YPdf5Hf+D7ewM=" crossorigin=""></script> 
+  <script src="//code.jquery.com/jquery-3.6.4.min.js" integrity="sha384-UG8ao2jwOWB7/oDdObZc6ItJmwUkR/PfMyt9Qs5AwX7PsnYn1CRKCTWyncPTWvaS" crossorigin="anonymous"></script> 
+  <script src="//cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ENjdO4Dr2bkBIFxQpeoTz1HIcje39Wm4jDKdf19U8gI4ddQ3GYNS7NTKfAdVQSZe" crossorigin="anonymous"></script> 
+  <script src="//cdn.jsdelivr.net/npm/bootstrap-toaster@5.2.0-beta1.1/dist/umd/bootstrap-toaster.min.js" integrity="sha384-bCj4pb4bBON1ySbGsGAMRihVd1NE35xbsqfeomKDJPwPLFatXRpbWz6j1c5IT7i6" crossorigin="anonymous"></script> 
+  <script src="//cdn.jsdelivr.net/npm/tokml@0.4.0/tokml.min.js" integrity="sha384-1ZGDfR96PbEIjOT6/yWg3TiZ6jtd9uTrhz6F9gt1qz98Veo6ZHjJRMnQULAZ5lMG" crossorigin="anonymous"></script> 
+  <script src="//cdnjs.cloudflare.com/ajax/libs/luxon/3.4.4/luxon.min.js" integrity="sha512-dUlSLLkxslGILhPdCkALwk4szPhp3xmZIKFtlUD+O9Lslq41Aksmdt5OGqpomDoT4FsCUH70jQU8ezZHI3v1RQ==" crossorigin="anonymous"></script> 
+  <script>
       $(document).ready((function() {
 	  $('.spinner-border').hide()
 	  start = luxon.DateTime.now().ts
@@ -97,6 +105,6 @@
 		  $.post('//units.d8u.us/status', body)
 	      }
       })
-    </script>
-  </body>
-</html
+    </script>  
+ </body>
+</html>
