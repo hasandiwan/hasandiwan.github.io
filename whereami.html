@@ -30,7 +30,7 @@
 	map.locate({setView: true})
 	$.getJSON('//units.d8u.us/loc').done(function(response) {
 	    $.each(response.results, function(index, r) {
-		L.marker([r.latitude, r.longitude], {title: "I was here at "+r.loggedOn, alt: "I was here at "+r.loggedOn, opacity: (index == 0? 1 : 0.5), icon: icon}).addTo(markers).on('click', function() { $('#time').text(luxon.DateTime.fromISO(r.loggedOn).toRelative()); $('#distance').text(you._latlng.distanceTo([r.latitude, r.longitude]).toFixed(2) + " meters").parent().show(); })
+		L.marker([r.latitude, r.longitude], {title: "I was here at "+r.loggedOn, alt: "I was here at "+r.loggedOn, opacity: (index == 0? 1 : 0.5), icon: icon}).addTo(markers).on('click', function() { $('#time').text(luxon.DateTime.fromISO(r.loggedOn).toRelative()); $('#distance').text(you._latlng.distanceTo([r.latitude, r.longitude]).toFixed(2) + " meters").parent().show(); }).addTo(markers)
 	    })
 	    // FIXME Not working
 	    map.fitBounds([[markers.getBounds()._southWest.lat, markers.getBounds()._southWest.lng], [markers.getBounds()._northEast.lat, markers.getBounds()._northEast.lng]])
