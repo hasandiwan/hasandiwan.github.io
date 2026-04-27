@@ -7,7 +7,7 @@
 	  crossorigin=""/>
         <link href="//cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-KK94CHFLLe+nY2dmCWGMq91rCGa5gtU4mk92HdvYe+M/SXH301p5ILy+dN9+nJOZ" crossorigin="anonymous">
     <style>
-      #map { height: 93vh; width: 100vw;}
+      #map { height: 100vh; width: 100vw;}
     </style>
   </head>
   <body>
@@ -30,7 +30,7 @@
 	map.locate({setView: true})
 	$.getJSON('https://units.d8u.us/loc').done(function(response) {
 	    $.each(response.results, function(index, r) {
-		L.marker([r.latitude, r.longitude], {title: "I was here at "+r.loggedOn, alt: "I was here at "+r.loggedOn, opacity: (index == 0? 1 : 0.5), icon: icon}).addTo(markers).on('click', function() { $('#time').text(luxon.DateTime.fromISO(r.loggedOn).toRelative()); $('#distance').text(you._latlng.distanceTo([r.latitude, r.longitude]).toFixed(2) + " meters").parent().show(); }).addTo(markers)
+		L.marker([r.latitude, r.longitude], {title: "I was here at "+r.loggedOn, alt: "I was here at "+r.loggedOn, opacity: (index == 0? 1 : 0.5), icon: icon}).addTo(markers).on('click', function() { $('#time').text(luxon.DateTime.fromISO(r.loggedOn).toRelative()); $('#distance').text(you._latlng.distanceTo([r.latitude, r.longitude]).toFixed(2) + " meters").parent().show(); $('#map').css('height', '93vh');}).addTo(markers)
 	    })
 	    markers.addTo(map)
 	    map.fitBounds([[markers.getBounds()._southWest.lat, markers.getBounds()._southWest.lng], [markers.getBounds()._northEast.lat, markers.getBounds()._northEast.lng]])
