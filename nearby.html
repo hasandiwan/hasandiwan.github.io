@@ -18,7 +18,7 @@ th { text-decoration: underline; }
         <p><span class="text-muted">Muted text</span> indicates the venue is reported as closed, as of <span id="time"></span> local time.</p>
         <table class="table">
             <thead>
-                <tr><th>Venue</th><th>Distance/Bearing</th><th>Address (Clickable Phone #)</th></tr>
+                <tr><th>Rating color</th><th>Venue</th><th>Distance/Bearing</th><th>Address (Clickable Phone #)</th></tr>
             </thead>
             <tbody>
             </tbody>
@@ -28,24 +28,46 @@ th { text-decoration: underline; }
     <script src="//cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/luxon/3.4.4/luxon.min.js" integrity="sha512-dUlSLLkxslGILhPdCkALwk4szPhp3xmZIKFtlUD+O9Lslq41Aksmdt5OGqpomDoT4FsCUH70jQU8ezZHI3v1RQ==" crossorigin="anonymous"></script>
     <script>
-$(document).ready(function() {
-    if (!('geolocation' in navigator)) {
-        $('#container').text('No, you need to enable location services for this page to do anything useful')
-        return
-    }
-    $('#time').text(luxon.DateTime.local().toSQL({includeOffset: false}))
-    navigator.geolocation.getCurrentPosition(function(position){
-        $.getJSON('//units-helper.d8u.us/weather', {latitude: position.coords.latitude, longitude: position.coords.longitude}).done(function(d) { $('#currentConditions').html('<img src="'+d.conditions+'"/>').attr('title', d.tempF+' F/'+d.tempC+' C').click(function() { loc = window.location.href.replace('nearby.html', 'weather.html');window.open(loc);return false})})
-        $.getJSON('//units.d8u.us/nearme?latitude='+ position.coords.latitude+'&longitude='+position.coords.longitude).done(function(response) {
-            $.each(response.venues, function(i, venue) {
-                $('tbody').append('<tr><td class="venue"><a class="link" href="'+venue.url+'">'+venue.venue+'</a></td><td><span id="distance"><a href="#" title="&#8773;  &#8593;">'+venue.distance+'</a></span><span class="arrow">&uarr;</span></td><td>'+venue.streetAddress+' (<a href="telno:'+venue.phoneNumber+'">'+venue.phoneNumber+'</a>)</td></tr>')
-                if ($('.link').last().attr('href') === 'null') {  $('tr:last > td').first().text($('.link').last().text()) }
-                $('.arrow').last().css('transform', 'rotate('+venue.bearing+'deg)').attr('title', venue.bearing+' degrees from north')
-                if (!venue.isOpen) { $('tr:last > td').addClass('text-muted') }
-                $('tr:last').html($('tr:last').html().replace('(<a href="telno:null">null</a>)', ''))
-        })
-    }) })
-})
+      $(document).ready(function() {
+	  $.ajaxSetup({
+              timeout: 0
+	  });
+	  if((!("geolocation" in navigator)) || (null == navigator.geolocation)) {
+              $('div.container-fluid').hide();
+              $('.jumbotron').html('Sorry, you lack location support.');
+	  }
+	  else{
+              $('.container-fluid').hide();
+              navigator.geolocation.getCurrentPosition(function(position) {
+		  $.getJSON('/nearme?latitude='+position.coords.latitude+'&longitude='+position.coords.longitude, function(data, ts, xhr) {
+                      $('div.footer').append('Took '+data.time+' miliseconds to fetch from the backend, your location is ('+Math.round(position.coords.latitude*1000)/1000+' &deg;, '+Math.round(position.coords.longitude*1000)/1000 + '&deg;). <span class="closed"'+">Text decorated thusly</span> is used to indicate venues that are currently closed. The <span class="+'"arrow"> &uarr; </span>'+"'s direction represents the bearing from north to the relevant location.");
+                      $('.jumbotron').hide();
+                      html = '<table class="table"><caption>Bold text signifies a venue is open</caption><thead><tr><th>Venue</th><th>Distance from you (with bearing from north indicated by the arrow'+"'s direction)</th><th>Address<br>Phone Number (if available)</th></tr></thead><tbody>";
+                      $.each(data.venues,function(k,v) {
+			  html+='<tr class="';
+			  if ((null!= v.isOpen) && !v.isOpen) {
+                              html+= 'closed';
+			  } else {
+                              html+=  'open';
+			  }
+			  html+='"><td class="venue-name" style = "background:'+v.rating+'" title = "'+v.score+'">'+v.venue+'<sup>'+v.score+'</sup></td><td class="distanceAndBearing"><span class="arrow" style = "transform:rotate('+v.bearing+'deg);-ms-transform: rotate('+v.bearing+'deg);-webkit-transform:rotate('+v.bearing+'deg);">&uarr;</span>'+Math.round((v.distance+Number.EPSILON)*100)/100+' meters (&thickapprox;' +Math.round(3.28084*(((v.distance+Number.EPSILON)*100)/100))+' feet)</td><td class="link"><a href = "https://www.openstreetmap.org/search?whereami=1&query='+v.latitude+'%2C'+v.longitude+'#map=15/'+v.latitude+'/'+v.longitude+'" target = "_blank">'+v.streetAddress+'</a>';
+			  if(null!= v.phoneNumber) {
+                              html += '<br><a href = "tel:'+v.phoneNumber+'">'+v.phoneNumber+'</a>';
+			  }
+			  html+='</td></tr>';
+                      });
+                      html = html + '</tbody></table><p><small class="text-muted">Page loaded in '+data.time+' miliseconds</small></p>';
+                      $('div.container-fluid').html(html);
+                      $('.container-fluid').show();
+		  }) ,function(err) {
+		      if (err.code  ==  err.PERMISSION_DENIED) {
+			  $('.jumbotron').html('<span>Location access denied</span>').addClass('alert alert-danger').show();
+			  $('.container-fluid').hide();
+		      }
+		  }
+              })
+	  }
+      });
     </script>
   </body>
 </html>
