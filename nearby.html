@@ -15,12 +15,14 @@ th { text-decoration: underline; }
   <body data-bs-theme="dark">
     <div class="container">
     <span id="currentConditions" class="position-absolute top-0"></span>
-        <p><span class="text-muted">Muted text</span> indicates the venue is reported as closed, as of <span id="time"></span> local time.</p>
+    <p><span class="text-muted">Muted text</span> indicates the venue is reported as closed; <strong>bold text</strong> indicates the venue is open<br> as of <span id="time"></span> local time;.</p>
+    
         <table class="table">
             <thead>
                 <tr><th>Rating color</th><th>Venue</th><th>Distance/Bearing</th><th>Address (Clickable Phone #)</th></tr>
             </thead>
             <tbody>
+	      <tr></tr>
             </tbody>
         </table>
     </div>
@@ -37,28 +39,32 @@ th { text-decoration: underline; }
               $('.jumbotron').html('Sorry, you lack location support.');
 	  }
 	  else{
-              $('.container-fluid').hide();
+              $('.container').hide();
               navigator.geolocation.getCurrentPosition(function(position) {
-		  $.getJSON('/nearme?latitude='+position.coords.latitude+'&longitude='+position.coords.longitude, function(data, ts, xhr) {
-                      $('div.footer').append('Took '+data.time+' miliseconds to fetch from the backend, your location is ('+Math.round(position.coords.latitude*1000)/1000+' &deg;, '+Math.round(position.coords.longitude*1000)/1000 + '&deg;). <span class="closed"'+">Text decorated thusly</span> is used to indicate venues that are currently closed. The <span class="+'"arrow"> &uarr; </span>'+"'s direction represents the bearing from north to the relevant location.");
+		  $('.progress').show()
+		  $.getJSON('//units.d8u.us/nearme', {latitude: position.coords.latitude, longitude: position.coords.longitude}, function(data) {
+		      weatherParams={zip: position.coords.latitude+','+position.coords.longitude}
+		      $.getJSON('//units.d8u.us/weather', weatherParams, function(resp) {
+			  $('span#currentConditions').html('<img src="'+resp.conditions+'"/>') // TODO add text with this.conditions
+			  $('#currentConditions > img:nth-child(1)').css('width', '18px').css('aspect-ratio', '1/1')
+		      });
+                      $('div.footer').append('Took '+data.time+' miliseconds to fetch from the backend, your location is ('+Math.round(position.coords.latitude*1000)/1000+' &deg;, '+Math.round(position.coords.longitude*1000)/1000 + '&deg;). <span class="closed"'+">Text decorated thusly</span> is used to indicate venues that are currently closed. The <span class="+'"arrow"> &#8593; </span>'+"'s direction represents the bearing from north to the relevant location.");
                       $('.jumbotron').hide();
-                      html = '<table class="table"><caption>Bold text signifies a venue is open</caption><thead><tr><th>Venue</th><th>Distance from you (with bearing from north indicated by the arrow'+"'s direction)</th><th>Address<br>Phone Number (if available)</th></tr></thead><tbody>";
                       $.each(data.venues,function(k,v) {
-			  html+='<tr class="';
+			  $('tbody').append($('tr').css({'filter': 'grayscale('+v.rating+')','-webkit-filter': 'grayscale('+v.rating+'%)'}).append($('td').attr('style', 'filter: grayscale('+v.score+')').attr('title', v.score)).append($('td').addClass('venue-name').html(v.venue+$('sup').text(v.score))).append($('td').addClass('distanceAndBearing').append($('td > span').addClass('arrow').css('transform', 'rotate('+v.bearing+'deg)').html('&#8593;')).after(Math.round(v.distance+Number.EPSILON)*100)/100+' meters (&thickapprox;'+ Math.round(3.28084*(((v.distance+Number.EPSILON)*100)/100))+' ft').append($('td').addClass("link").text($('a').attr('href', 'https://osmap.asia/#17/'+v.latitude+'/'+v.longitude).attr('target', '_blank')).text(v.streetAddress)))
 			  if ((null!= v.isOpen) && !v.isOpen) {
-                              html+= 'closed';
+                              $('tr:last').attr('class', 'closed');
 			  } else {
-                              html+=  'open';
+                              $('tr:last').attr('class', 'open');
 			  }
-			  html+='"><td class="venue-name" style = "background:'+v.rating+'" title = "'+v.score+'">'+v.venue+'<sup>'+v.score+'</sup></td><td class="distanceAndBearing"><span class="arrow" style = "transform:rotate('+v.bearing+'deg);-ms-transform: rotate('+v.bearing+'deg);-webkit-transform:rotate('+v.bearing+'deg);">&uarr;</span>'+Math.round((v.distance+Number.EPSILON)*100)/100+' meters (&thickapprox;' +Math.round(3.28084*(((v.distance+Number.EPSILON)*100)/100))+' feet)</td><td class="link"><a href = "https://www.openstreetmap.org/search?whereami=1&query='+v.latitude+'%2C'+v.longitude+'#map=15/'+v.latitude+'/'+v.longitude+'" target = "_blank">'+v.streetAddress+'</a>';
 			  if(null!= v.phoneNumber) {
-                              html += '<br><a href = "tel:'+v.phoneNumber+'">'+v.phoneNumber+'</a>';
+			      $('td:last').text($('td:last').text() + '<br><a href = "tel:'+v.phoneNumber+'">'+v.phoneNumber+'</a>');
 			  }
-			  html+='</td></tr>';
-                      });
-                      html = html + '</tbody></table><p><small class="text-muted">Page loaded in '+data.time+' miliseconds</small></p>';
-                      $('div.container-fluid').html(html);
-                      $('.container-fluid').show();
+		      });
+		      $('.footer').html('<p><small class="text-muted">Page loaded in '+data.time+' miliseconds</small></p>')
+                      $('.container').show();
+		      $('#time').text(luxon.DateTime.now())
+		      $('.progress').hide()
 		  }) ,function(err) {
 		      if (err.code  ==  err.PERMISSION_DENIED) {
 			  $('.jumbotron').html('<span>Location access denied</span>').addClass('alert alert-danger').show();
