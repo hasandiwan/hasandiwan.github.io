@@ -9,9 +9,22 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.css" integrity="sha384-snpJ3knpH6avB6cP1vPkNdmRzCYaCpom/3TNOyvo189BiogXYXQfXkyYpZ2/xADs" crossorigin="anonymous">
     <style>
       #map { height: 91vh; width: 100vw;}
+      .icon-inline {
+	  /* Match the text size perfectly */
+  height: 1em;
+  width: 1em;
+
+  /* Align the icon vertically with the text baseline */
+  vertical-align: middle;
+
+  /* Optional: nudge it slightly if it feels top-heavy */
+  position: relative;
+  top: -0.05em;
+}
     </style>
   </head>
   <body>
+    <p>You're at the <img src="https://hasan.d8u.us/bust.png" class="icon-inline"/>, I'm at the <img src="https://units.d8u.us/pic" class="icon-inline"/>. Click on me (either <img src="https://units.d8u.us/pic" class="icon-inline"/> or <img src="https://units.d8u.us/pic" class="icon-inline" style="opacity: 0.5"/>) to get how far apart we are.</p>
     <div id="map"></div>
     <div id="distanceBlock" class="text-body-secondary">You are <span class="fw-bold" id="distance"></span> from the clicked marker, which was my real location <span class="fw-bold" id="time"></span>.</div>
     <script src="//code.jquery.com/jquery-4.0.0.min.js" integrity="sha512-8LENNbXmzI/Gbj+OwXmqR6V4QaUAw0/porPzy1+dQoJqC0JPHedWoe0DDOTL2uHA5XXJyIsPtiMHH86pVlay6A==" crossorigin="anonymous"></script>
@@ -29,15 +42,18 @@
 	map = L.map('map').setView([0,0],1).locate({setView: true}).on('locationfound', function(e) {
 	    markers.addLayer(L.marker(e.latlng, {icon: yourIcon}).addTo(map).bindPopup("You are here"));
 	    map.fitBounds([me.getBounds(), markers.getBounds()])
-	})
+	});
 	$.getJSON('https://units.d8u.us/loc').done(function(response) {
 	    $.each(response.results, function(index, r){
 		me.addLayer(L.marker([r.latitude, r.longitude], {title: "I was here at "+r.loggedOn, alt: "I was here at "+r.loggedOn, icon: myIcon, opacity: (index == 0? 1 : 0.5)}).addTo(markers).bindPopup("I was here at "+r.loggedOn).on('click', function() {
 		    $('#time').text(luxon.DateTime.fromISO(r.loggedOn).toRelative());
-		    $('#distance').text(you._latLng.distanceTo([r.latitude, r.longitude]).toFixed(2) + " meters").parent().show();
-		}));
-		map.fitBounds([me.getBounds(), markers.getBounds()])
-	})});
+		    $('#distance').text(markers.getLayers()[0].getLatLng().distanceTo([r.latitude, r.longitude]).toFixed(2) + " meters");
+		    $('#distanceBlock').show();
+		})).addTo(map);
+		map.fitBounds([me.getBounds(), markers.getBounds()]);
+	    });
+	});
+
 	L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
 	    maxZoom: 19,
 	    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
