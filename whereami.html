@@ -2,65 +2,71 @@
 <html data-bs-theme="dark" lang="en">
   <head>
     <title>Where are you?</title>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-     integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+    <link rel="stylesheet" href="//unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+	  integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
 	  crossorigin=""/>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.css">
+    <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/notyf@3/notyf.min.css">
     <link href="//cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-KK94CHFLLe+nY2dmCWGMq91rCGa5gtU4mk92HdvYe+M/SXH301p5ILy+dN9+nJOZ" crossorigin="anonymous">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.css" integrity="sha384-snpJ3knpH6avB6cP1vPkNdmRzCYaCpom/3TNOyvo189BiogXYXQfXkyYpZ2/xADs" crossorigin="anonymous">
+    <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/notyf@3/notyf.min.css" integrity="sha384-snpJ3knpH6avB6cP1vPkNdmRzCYaCpom/3TNOyvo189BiogXYXQfXkyYpZ2/xADs" crossorigin="anonymous">
     <style>
       #map { height: 91vh; width: 100vw;}
       .icon-inline {
 	  /* Match the text size perfectly */
-  height: 1em;
-  width: 1em;
+	  height: 1em;
+	  width: 1em;
 
-  /* Align the icon vertically with the text baseline */
-  vertical-align: middle;
+	  /* Align the icon vertically with the text baseline */
+	  vertical-align: middle;
 
-  /* Optional: nudge it slightly if it feels top-heavy */
-  position: relative;
-  top: -0.05em;
-}
+	  /* Optional: nudge it slightly if it feels top-heavy */
+	  position: relative;
+	  top: -0.05em;
+      }
     </style>
   </head>
   <body>
     <p>You're at the <img src="https://hasan.d8u.us/bust.png" class="icon-inline"/>, I'm at the <img src="https://units.d8u.us/pic" class="icon-inline"/>. Click on me (either <img src="https://units.d8u.us/pic" class="icon-inline"/> or <img src="https://units.d8u.us/pic" class="icon-inline" style="opacity: 0.5"/>) to get how far apart we are.</p>
-    <div id="map"></div>
+    <div id="map" data-testid="map"></div>
     <div id="distanceBlock" class="text-body-secondary">You are <span class="fw-bold" id="distance"></span> from the clicked marker, which was my real location <span class="fw-bold" id="time"></span>.</div>
     <script src="//code.jquery.com/jquery-4.0.0.min.js" integrity="sha512-8LENNbXmzI/Gbj+OwXmqR6V4QaUAw0/porPzy1+dQoJqC0JPHedWoe0DDOTL2uHA5XXJyIsPtiMHH86pVlay6A==" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.js" integrity="sha384-uuNfwJfjOG2ukYi4eAB11/t3lP4Zjf75a3UhgkLzEpiX8JpJfacpG7Ye+0tiVMxT" crossorigin="anonymous"></script>
+    <script src="//cdn.jsdelivr.net/npm/notyf@3/notyf.min.js" integrity="sha384-uuNfwJfjOG2ukYi4eAB11/t3lP4Zjf75a3UhgkLzEpiX8JpJfacpG7Ye+0tiVMxT" crossorigin="anonymous"></script>
     <script src="//cdn.jsdelivr.net/npm/luxon@3.7.2/build/global/luxon.min.js" integrity="sha256-UWxf6lyCvfH7XEcrmq/cqc2m3IBrLBLOnWLC4Pw0gQQ=" crossorigin="anonymous"></script>
     <script src="//unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <script src="//cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ENjdO4Dr2bkBIFxQpeoTz1HIcje39Wm4jDKdf19U8gI4ddQ3GYNS7NTKfAdVQSZe" crossorigin="anonymous"></script>
-  <script>
-    $(document).ready(function() {
-	$('#distanceBlock').hide();
-	markers = L.featureGroup();
-	me = L.featureGroup();
-	myIcon = L.icon({iconUrl: 'https://units.d8u.us/pic', iconSize: [38, 38], iconAnchor: [22, 94], popupAnchor: [-3, -76]});
-	yourIcon = L.icon({iconUrl: 'https://hasan.d8u.us/bust.png', iconSize: [38, 38], iconAnchor: [22, 94], popupAnchor:  [-3, -76]});
-	map = L.map('map').setView([0,0],1).locate({setView: true}).on('locationfound', function(e) {
-	    markers.addLayer(L.marker(e.latlng, {icon: yourIcon}).addTo(map).bindPopup("You are here"));
-	    map.fitBounds([me.getBounds(), markers.getBounds()])
-	});
-	$.getJSON('https://units.d8u.us/loc').done(function(response) {
-	    $.each(response.results, function(index, r){
-		me.addLayer(L.marker([r.latitude, r.longitude], {title: "I was here at "+r.loggedOn, alt: "I was here at "+r.loggedOn, icon: myIcon, opacity: (index == 0? 1 : 0.5)}).addTo(markers).bindPopup("I was here at "+r.loggedOn).on('click', function() {
-		    $('#time').text(luxon.DateTime.fromISO(r.loggedOn).toRelative());
-		    $('#distance').text(markers.getLayers()[0].getLatLng().distanceTo([r.latitude, r.longitude]).toFixed(2) + " meters");
-		    new Notyf().success($('#distance').text());
-		    $('#distanceBlock').show();
-		})).addTo(map);
-		map.fitBounds([me.getBounds(), markers.getBounds()]);
-	    });
-	});
+    <script>
+      $(document).ready(function() {
+	  $('#distanceBlock').hide();
+	  markers = L.featureGroup();
+	  me = L.featureGroup();
+	  myIcon = L.icon({iconUrl: 'https://units.d8u.us/pic', iconSize: [38, 38], iconAnchor: [19, 19], popupAnchor: [-3, -36]});
+	  yourIcon = L.icon({iconUrl: 'https://hasan.d8u.us/bust.png', iconSize: [38, 38], iconAnchor: [19, 19], popupAnchor:  [-3, -36]});
+	  map = L.map('map').setView([0,0],1).locate({setView: false}).on('locationfound', function(e) {
+	      $.getJSON('https://units.d8u.us/loc').done(function(response) {
+		  $.each(response.results.sort(function(a,b) {return luxon.DateTime.fromISO(a.loggedOn) - luxon.DateTime.fromISO(b.loggedOn)}), function(index, r) {
+		      var m = L.marker([r.latitude, r.longitude], {title: "I was here at "+luxon.DateTime.fromISO(r.loggedOn, { zone: Intl.DateTimeFormat().resolvedOptions().timeZone }).toISO(), alt: "I was here at "+luxon.DateTime.fromISO(r.loggedOn, { zone: Intl.DateTimeFormat().resolvedOptions().timeZone }).toISO(), icon: myIcon, opacity: (
+			  (m === response.results.sort(function(a,b){return luxon.DateTime.fromISO(a.loggedOn) - luxon.DateTime.fromISO(b.loggedOn)}).length) ? 1.0 : 0.5)
+								  }).addTo(markers).bindPopup("I was here at "+luxon.DateTime.fromISO(r.loggedOn, { zone: Intl.DateTimeFormat().resolvedOptions().timeZone }).toISO()).on('click', function() {
+								      $('#time').text(luxon.DateTime.fromISO(r.loggedOn, {zone: Intl.DateTimeFormat().resolvedOptions().timeZone}).toRelative());
+								      $('#distance').text(e.latlng.distanceTo([r.latitude, r.longitude]).toFixed(2) + " meters");
+								      new Notyf().success(e.latlng.distanceTo([r.latitude, r.longitude]).toFixed(2) + " meters");
+								      $('#distanceBlock').show();
+								  })
+		      markers.addLayer(m).addTo(map);
+		      markers.getLayers().splice(0, 0, L.marker(e.latlng, {icon: yourIcon, title: "You are here at "+luxon.DateTime.now().toISO()}).addTo(map).bindPopup("You are here at "+luxon.DateTime.now().toISO({zone: Intl.DateTimeFormat().resolvedOptions().timeZone}) ));
+	      	      L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+			  maxZoom: 19,
+			  attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+		      }).addTo(map);
+		  })}).done(function() {
+		      if (markers.getLayers().length > 0) {
+			  map.invalidateSize();
+ 			  map.fitBounds(markers.getBounds(), { padding: [30, 30], animate: false });
+		      }
+		  }).fail(function() { console.log("Request failed"); });
 
-	L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-	    maxZoom: 19,
-	    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-	}).addTo(map);
-    });
+
+	  });
+      });
     </script>
   </body>
-  </html>
+</html>
