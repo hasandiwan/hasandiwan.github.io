@@ -22,10 +22,11 @@
 	  position: relative;
 	  top: -0.05em;
       }
+      .translucent { opacity: 0.5; }
     </style>
   </head>
   <body>
-    <p>You're at the <img src="https://hasan.d8u.us/bust.png" class="icon-inline"/>, I'm at the <img src="https://units.d8u.us/pic" class="icon-inline"/>. Click on me (either <img src="https://units.d8u.us/pic" class="icon-inline"/> or <img src="https://units.d8u.us/pic" class="icon-inline" style="opacity: 0.5"/>) to get how far apart we are.</p>
+    <p>You're at the <img src="https://hasan.d8u.us/bust.png" class="icon-inline"/>, I'm at the <img src="https://units.d8u.us/pic" class="icon-inline"/>. Click on me (either <img src="https://units.d8u.us/pic" class="icon-inline"/> or <img src="https://units.d8u.us/pic" class="icon-inline translucent"/>) to get how far apart we are.</p>
     <div id="map" data-testid="map"></div>
     <div id="distanceBlock" class="text-body-secondary">You are <span class="fw-bold" id="distance"></span> from the clicked marker, which was my real location <span class="fw-bold" id="time"></span>.</div>
     <script src="//code.jquery.com/jquery-4.0.0.min.js" integrity="sha512-8LENNbXmzI/Gbj+OwXmqR6V4QaUAw0/porPzy1+dQoJqC0JPHedWoe0DDOTL2uHA5XXJyIsPtiMHH86pVlay6A==" crossorigin="anonymous"></script>
@@ -43,8 +44,7 @@
 	  map = L.map('map').setView([0,0],1).locate({setView: false}).on('locationfound', function(e) {
 	      $.getJSON('https://units.d8u.us/loc').done(function(response) {
 		  $.each(response.results.sort(function(a,b) {return luxon.DateTime.fromISO(a.loggedOn) - luxon.DateTime.fromISO(b.loggedOn)}), function(index, r) {
-		      var m = L.marker([r.latitude, r.longitude], {title: "I was here at "+luxon.DateTime.fromISO(r.loggedOn, { zone: Intl.DateTimeFormat().resolvedOptions().timeZone }).toISO(), alt: "I was here at "+luxon.DateTime.fromISO(r.loggedOn, { zone: Intl.DateTimeFormat().resolvedOptions().timeZone }).toISO(), icon: myIcon, opacity: (
-			  (m === response.results.sort(function(a,b){return luxon.DateTime.fromISO(a.loggedOn) - luxon.DateTime.fromISO(b.loggedOn)}).length) ? 1.0 : 0.5)
+		      var m = L.marker([r.latitude, r.longitude], {title: "I was here at "+luxon.DateTime.fromISO(r.loggedOn, { zone: Intl.DateTimeFormat().resolvedOptions().timeZone }).toISO(), alt: "I was here at "+luxon.DateTime.fromISO(r.loggedOn, { zone: Intl.DateTimeFormat().resolvedOptions().timeZone }).toISO(), icon: myIcon, opacity: ((m === response.results.sort(function(a,b){return luxon.DateTime.fromISO(a.loggedOn) - luxon.DateTime.fromISO(b.loggedOn)}).length) ? 1.0 : 0.5)
 								  }).addTo(markers).bindPopup("I was here at "+luxon.DateTime.fromISO(r.loggedOn, { zone: Intl.DateTimeFormat().resolvedOptions().timeZone }).toISO()).on('click', function() {
 								      $('#time').text(luxon.DateTime.fromISO(r.loggedOn, {zone: Intl.DateTimeFormat().resolvedOptions().timeZone}).toRelative());
 								      $('#distance').text(e.latlng.distanceTo([r.latitude, r.longitude]).toFixed(2) + " meters");
