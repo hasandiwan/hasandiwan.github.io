@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-slate-50">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Units - Account Management</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        plaid: {
+                            100: '#E8F5E9',
+                            500: '#10B981',
+                            600: '#059669',
+                            900: '#064E3B',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="h-full antialiased flex flex-col justify-between selection:bg-brand-500 selection:text-slate-950">
+
+    <!-- Header -->
+    <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur sticky top-0 z-20 px-4 py-3">
+        <div class="max-w-md mx-auto flex items-center justify-between">
+            <div class="flex items-center space-x-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-brand-500 animate-pulse"></span>
+                <span class="font-bold text-sm tracking-wider uppercase text-slate-100">UNITS // accounts manager</span>
+            </div>
+            <span class="text-[10px] text-slate-400 border border-slate-800 px-2 py-0.5 rounded bg-slate-950" id="version">v1.0.4</span>
+        </div>
+    </header>
+
+    <main class="flex-1 max-w-md w-full mx-auto p-4 space-y-5">
+
+        <!-- User Authentication / Lookup Bar -->
+        <section class="bg-slate-900 border border-slate-800 rounded-xl p-4 shadow-lg space-y-3">
+            <label for="user-id" class="block text-xs font-semibold text-slate-400 uppercase tracking-wider">
+	      Your Phone Number
+            </label>
+            <div class="flex space-x-2">
+                <div class="relative flex-1">
+                    <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-500 text-xs">#</span>
+                    <input type="tel" id="user-id" value="14156907930" placeholder="14156907930"
+                        class="w-full pl-7 pr-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-sm font-mono text-slate-100 focus:outline-none focus:border-brand-500 transition">
+                </div>
+                <button onclick="fetchLinkedAccounts()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-4 py-2 rounded-lg text-xs font-bold transition flex items-center space-x-1.5 border border-slate-700">
+                    <i class="fa-solid fa-arrow-right-to-bracket text-brand-500"></i>
+                    <span>LOAD</span>
+                </button>
+            </div>
+        </section>
+
+        <!-- Dynamic Status Notification -->
+        <div id="status-box" class="hidden p-3 rounded-lg text-xs border flex items-center justify-between transition-all">
+            <span id="status-msg"></span>
+            <button onclick="dismissStatus()" class="text-slate-400 hover:text-slate-200 ml-2">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+
+        <!-- Linked Accounts Section -->
+        <section class="space-y-3">
+            <div class="flex items-center justify-between">
+                <h2 class="text-xs font-bold uppercase tracking-wider text-slate-400">Connected Bank Items</h2>
+                <span id="item-count" class="text-[10px] bg-slate-900 text-slate-400 border border-slate-800 px-2 py-0.5 rounded-full">0 ITEMS</span>
+            </div>
+
+            <!-- Items List Container -->
+            <div id="accounts-list" class="space-y-3">
+                <!-- Dynamically injected items go here -->
+            </div>
+
+            <!-- Empty State -->
+            <div id="empty-state" class="p-8 text-center bg-slate-900/40 border border-dashed border-slate-800 rounded-xl space-y-3">
+                <i class="fa-solid fa-link-slash text-2xl text-slate-600"></i>
+                <div class="text-xs text-slate-400">No bank items linked for this user ID yet.</div>
+            </div>
+        </section>
+
+        <!-- Primary Action: Trigger Plaid Link -->
+        <section>
+            <button id="add-bank-btn" onclick="openPlaidLink()" class="w-full bg-brand-500 hover:bg-brand-600 active:scale-[0.99] text-slate-950 font-bold py-3.5 px-4 rounded-xl shadow-lg transition flex items-center justify-center space-x-2 text-sm">
+                <i class="fa-solid fa-plus-circle"></i>
+                <span>LINK NEW BANK / CREDIT CARD</span>
+            </button>
+            <p class="text-[10px] text-slate-500 text-center mt-2">Opens official Plaid OAuth web view. Credentials are never stored locally.</p>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-slate-900 p-4 text-center text-[10px] text-slate-600">
+        UNITS BACKEND API &bull; PLAID LINK v2.0
+    </footer>
+
+    <!-- Application Script -->
+    <script>
+        // State store
+      //        let currentUserId = "14156907930";
+
+        let linkedItems = [];
+
+        // Initializer
+        document.addEventListener('DOMContentLoaded', () => {
+            currentUserId = document.getElementById('user-id').value.trim();
+            fetchLinkedAccounts();
+        });
+
+        // 1. Fetch Stored Accounts for User
+        async function fetchLinkedAccounts() {
+            currentUserId = document.getElementById('user-id').value.trim();
+            if (!currentUserId) {
+                showStatus("Please enter a valid User Phone / ID.", "error");
+                return;
+            }
+
+            showStatus("Loading account records...", "info");
+
+            try {
+                // Endpoint calling your backend Python /bal endpoint
+                const res = await fetch(`https://units.d8u.us/bal/${currentUserId}`);
+
+                if (!res.ok) {
+                    throw new Error(`Server returned HTTP ${res.status}`);
+                }
+
+                const data = await res.json();
+
+                if (data.error) {
+                    showStatus(data.error, "error");
+                    linkedItems = [];
+                } else {
+                    // Normalize accounts array returned by backend
+                    linkedItems = parseBackendData(data);
+                    showStatus("Accounts loaded successfully.", "success");
+                }
+            } catch (err) {
+                // Fallback demo dataset if offline or local testing
+                console.warn("Backend request failed, loading local state:", err);
+                linkedItems = getDemoData();
+//                showStatus("Loaded state (Demo Mode)", "info");
+            }
+
+            renderAccounts();
+        }
+
+        // Parse Python response format into structured items
+        function parseBackendData(data) {
+            if (!data.accounts || data.accounts.length === 0) return [];
+
+            // Group accounts under a single Plaid Item container
+            return [{
+                itemId: "item_01",
+                institution: "First Sandbox Bank",
+                accounts: data.accounts.map((acc, idx) => ({
+                    id: `acc_${idx}`,
+                    name: acc.name,
+                    balance: acc.balance,
+                    type: acc.name.toLowerCase().includes('credit') ? 'credit card' : 'depository'
+                }))
+            }];
+        }
+
+        // Demo fallback data
+        function getDemoData() {
+            return [{
+                itemId: "item_demo_01",
+                institution: "First Sandbox Bank",
+                accounts: [
+                    { id: "a1", name: "Plaid Checking", balance: 110.00, type: "checking" },
+                    { id: "a2", name: "Plaid Savings", balance: 210.00, type: "savings" },
+                    { id: "a3", name: "Plaid Credit Card", balance: 410.00, type: "credit card" },
+                    { id: "a4", name: "Plaid Business Credit Card", balance: 5020.00, type: "credit card" }
+                ]
+            }];
+        }
+
+        // 2. Render Linked Items
+        function renderAccounts() {
+            const container = document.getElementById('accounts-list');
+            const emptyState = document.getElementById('empty-state');
+            const itemCountElem = document.getElementById('item-count');
+
+            container.innerHTML = '';
+
+            if (linkedItems.length === 0) {
+                emptyState.classList.remove('hidden');
+                itemCountElem.textContent = '0 ITEMS';
+                return;
+            }
+
+            emptyState.classList.add('hidden');
+            let totalAccounts = 0;
+
+            linkedItems.forEach(item => {
+                totalAccounts += item.accounts.length;
+                const card = document.createElement('div');
+                card.className = "bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-md";
+
+                let subAccountsHTML = item.accounts.map(acc => `
+                    <div class="py-2 px-3 bg-slate-950/60 rounded-lg flex items-center justify-between border border-slate-800/80">
+                        <div>
+                            <div class="text-xs font-semibold text-slate-200">${acc.name}</div>
+                            <div class="text-[10px] text-slate-500 uppercase">${acc.type}</div>
+                        </div>
+                        <div class="text-xs font-extrabold text-brand-500">
+                            $${Number(acc.balance).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                        </div>
+                    </div>
+                `).join('');
+
+                card.innerHTML = `
+                    <div class="p-3 bg-slate-800/40 border-b border-slate-800 flex items-center justify-between">
+                        <div class="flex items-center space-x-2">
+                            <i class="fa-solid fa-building-columns text-slate-400 text-xs"></i>
+                            <span class="text-xs font-bold text-slate-100 uppercase">${item.institution}</span>
+                        </div>
+                        <button onclick="unlinkItem('${item.itemId}')" class="text-[10px] bg-red-950/80 hover:bg-red-900 text-red-400 border border-red-800/60 px-2 py-1 rounded font-bold transition flex items-center space-x-1">
+                            <i class="fa-solid fa-trash-can"></i>
+                            <span>UNLINK</span>
+                        </button>
+                    </div>
+                    <div class="p-3 space-y-2">
+                        ${subAccountsHTML}
+                    </div>
+                `;
+
+                container.appendChild(card);
+            });
+
+            itemCountElem.textContent = `${linkedItems.length} ITEM (${totalAccounts} ACCOUNTS)`;
+        }
+
+        // 3. Official Plaid Link Integration
+        async function openPlaidLink() {
+            const btn = document.getElementById('add-bank-btn');
+            btn.disabled = true;
+            btn.classList.add('opacity-75');
+
+            showStatus("Initializing Plaid Link token...", "info");
+
+            try {
+                // Request a link_token from your backend API
+                const res = await fetch(`https://units.d8u.us/link/token/create`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ number: currentUserId })
+                });
+
+                const data = await res.json();
+                const linkToken = data.link_token;
+
+                if (!linkToken) {
+                    throw new Error("No link_token received from server");
+                }
+
+                // Initialize official Plaid Link handler
+                const handler = Plaid.create({
+                    token: linkToken,
+                    onSuccess: async (public_token, metadata) => {
+                        showStatus("Exchanging public token...", "info");
+
+                        // Send public_token to your backend to exchange & save access_token
+                        await fetch('https://units.d8u.us/item/public_token/exchange', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                public_token: public_token,
+                                number: currentUserId
+                            })
+                        });
+
+                        showStatus("Bank linked successfully!", "success");
+                        fetchLinkedAccounts(); // Refresh item list
+                    },
+                    onExit: (err, metadata) => {
+                        btn.disabled = false;
+                        btn.classList.remove('opacity-75');
+                        if (err != null) {
+                            showStatus(`Plaid Link error: ${err.display_message || err.error_message}`, "error");
+                        }
+                    }
+                });
+
+                handler.open();
+
+            } catch (err) {
+                console.warn("Plaid Link backend call failed, fallback simulator engaged:", err);
+                simulatePlaidLink();
+            } finally {
+                btn.disabled = false;
+                btn.classList.remove('opacity-75');
+            }
+        }
+
+        // Offline Simulator Fallback (When testing without Plaid keys loaded)
+        function simulatePlaidLink() {
+            showStatus("Plaid Sandbox simulated linking...", "info");
+            setTimeout(() => {
+                linkedItems.push({
+                    itemId: `item_${Date.now()}`,
+                    institution: "Chase Bank (Sandbox)",
+                    accounts: [
+                        { id: `a_${Date.now()}_1`, name: "Total Checking", balance: 1450.50, type: "checking" },
+                        { id: `a_${Date.now()}_2`, name: "Sapphire Reserve", balance: 320.10, type: "credit card" }
+                    ]
+                });
+                renderAccounts();
+                showStatus("Sandbox institution linked!", "success");
+            }, 1000);
+        }
+
+        // 4. Unlink Item (Plaid /item/remove)
+        async function unlinkItem(itemId) {
+            if (!confirm("Are you sure you want to remove this bank connection?")) return;
+
+            showStatus("Revoking Plaid access token...", "info");
+
+            try {
+                await fetch(`https://units.d8u.us/item/remove`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        user_id: currentUserId,
+                        item_id: itemId
+                    })
+                });
+
+                showStatus("Item unlinked successfully.", "success");
+            } catch (err) {
+                console.warn("Unlink backend request failed, dropping locally:", err);
+            }
+
+            // Remove item from UI state
+            linkedItems = linkedItems.filter(i => i.itemId !== itemId);
+            renderAccounts();
+        }
+
+        // Helper Notification Banner
+        function showStatus(msg, type = "info") {
+            const box = document.getElementById('status-box');
+            const msgElem = document.getElementById('status-msg');
+
+            msgElem.textContent = msg;
+            box.classList.remove('hidden', 'bg-slate-900', 'border-slate-800', 'bg-emerald-950/80', 'border-emerald-800', 'text-emerald-300', 'bg-red-950/80', 'border-red-800', 'text-red-300');
+
+            if (type === "success") {
+                box.classList.add('bg-emerald-950/80', 'border-emerald-800', 'text-emerald-300');
+            } else if (type === "error") {
+                box.classList.add('bg-red-950/80', 'border-red-800', 'text-red-300');
+            } else {
+                box.classList.add('bg-slate-900', 'border-slate-800', 'text-slate-300');
+            }
+	    dismissStatus();
+	}
+
+        function dismissStatus() {
+            document.getElementById('status-box').classList.add('hidden');
+        }
+    </script>
+</body>
+</html>
