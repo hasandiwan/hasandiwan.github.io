@@ -1,0 +1,917 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Archon: The Light and the Dark</title>
+  <!-- Bootstrap 5 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Rajdhani:wght@500;700&display=swap');
+
+    :root {
+      --bg-dark: #0a0b10;
+      --panel-bg: #141622;
+      --panel-border: #2c3046;
+      --accent-light: #f1c40f;
+      --accent-dark: #9b59b6;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: #e2e8f0;
+      font-family: 'Rajdhani', sans-serif;
+      min-height: 100vh;
+      user-select: none;
+      padding-bottom: 20px;
+    }
+
+    .retro-title {
+      font-family: 'Press Start 2P', monospace;
+      color: #fff;
+      text-shadow: 0 0 10px #f1c40f, 0 0 20px #9b59b6;
+      letter-spacing: 2px;
+    }
+
+    .game-card {
+      background: var(--panel-bg);
+      border: 2px solid var(--panel-border);
+      border-radius: 10px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.7);
+    }
+
+    /* GUARANTEED CANVA CONTAINER SIZING TO PREVENT COLLAPSE */
+    .canvas-wrapper {
+      position: relative;
+      width: 100%;
+      background: #000;
+      border: 3px solid #343a40;
+      border-radius: 8px;
+      box-shadow: inset 0 0 20px rgba(0,0,0,0.9);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+    }
+
+    .canvas-wrapper-board {
+      min-height: 340px;
+    }
+
+    .canvas-wrapper-arena {
+      min-height: 260px;
+    }
+
+    canvas {
+      display: block;
+      width: 100% !important;
+      height: auto !important;
+      max-width: 100%;
+    }
+
+    .badge-light-side {
+      background: linear-gradient(45deg, #f1c40f, #ffffff);
+      color: #111;
+      font-weight: bold;
+    }
+
+    .badge-dark-side {
+      background: linear-gradient(45deg, #8e44ad, #ff0055);
+      color: #fff;
+      font-weight: bold;
+    }
+
+    .log-box {
+      height: 140px;
+      overflow-y: auto;
+      background: rgba(0,0,0,0.6);
+      border: 1px solid var(--panel-border);
+      font-family: monospace;
+      font-size: 0.8rem;
+    }
+
+    .keycap {
+      background: #232736;
+      border: 1px solid #484e68;
+      border-bottom: 2px solid #111;
+      border-radius: 4px;
+      padding: 1px 6px;
+      font-family: monospace;
+      font-size: 0.75rem;
+      color: #fff;
+      display: inline-block;
+    }
+
+    .stat-bar {
+      height: 7px;
+      border-radius: 4px;
+      background-color: #222;
+      overflow: hidden;
+    }
+    .stat-fill-hp { background-color: #2ecc71; transition: width 0.2s ease; }
+    .stat-fill-cd { background-color: #3498db; transition: width 0.1s linear; }
+
+    .phase-badge {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 0.65rem;
+      padding: 6px 10px;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body class="py-2">
+
+<div class="container-fluid px-3 max-w-7xl">
+  <!-- Header -->
+  <header class="text-center mb-3">
+    <h1 class="retro-title h4 mb-1">ARCHON</h1>
+    <p class="text-muted small mb-0">THE LIGHT AND THE DARK &bull; STRATEGY & REAL-TIME COMBAT</p>
+  </header>
+
+  <!-- Main Game Layout Grid -->
+  <div class="row g-3">
+    
+    <!-- Left Sidebar: Controls & Spells -->
+    <div class="col-lg-3">
+      <!-- Turn Overview -->
+      <div class="game-card p-3 mb-3 text-center">
+        <h6 class="text-uppercase fw-bold text-muted mb-2">Turn Status</h6>
+        <div id="turn-indicator" class="badge badge-light-side p-2 w-100 fs-6 mb-2">LIGHT SIDE TURN</div>
+        
+        <div class="d-flex justify-content-between align-items-center text-start border-bottom border-secondary pb-1 mb-1">
+          <small class="text-muted">Luminance Cycle:</small>
+          <span id="cycle-state" class="badge bg-secondary">NEUTRAL (Turn 1/3)</span>
+        </div>
+        <div class="d-flex justify-content-between align-items-center text-start">
+          <small class="text-muted">Power Points Occupied:</small>
+          <span>
+            <span id="light-pp-count" class="text-warning fw-bold">0</span> / 
+            <span id="dark-pp-count" class="text-danger fw-bold">0</span> <small class="text-muted">(Win: 5)</small>
+          </span>
+        </div>
+      </div>
+
+      <!-- Spells Panel -->
+      <div class="game-card p-3 mb-3">
+        <h6 class="fw-bold mb-2 text-info"><i class="fa-solid fa-wand-magic-sparkles me-2"></i>Caster Spells</h6>
+        <div class="d-grid gap-2">
+          <button id="btn-spell-heal" class="btn btn-sm btn-outline-success text-start" onclick="game.castSpell('HEAL')">
+            <i class="fa-solid fa-heart me-1"></i> Heal Unit
+          </button>
+          <button id="btn-spell-teleport" class="btn btn-sm btn-outline-warning text-start" onclick="game.castSpell('TELEPORT')">
+            <i class="fa-solid fa-bolt me-1"></i> Teleport Piece
+          </button>
+          <button id="btn-spell-summon" class="btn btn-sm btn-outline-info text-start" onclick="game.castSpell('SUMMON')">
+            <i class="fa-solid fa-ghost me-1"></i> Summon Elemental
+          </button>
+        </div>
+      </div>
+
+      <!-- Options -->
+      <div class="game-card p-3">
+        <h6 class="fw-bold mb-2 text-warning"><i class="fa-solid fa-sliders me-2"></i>Game Settings</h6>
+        <div class="form-check form-switch mb-2">
+          <input class="form-check-input" type="checkbox" id="ai-toggle" checked>
+          <label class="form-check-label small text-light" for="ai-toggle">Play vs AI (Dark Side)</label>
+        </div>
+        <div class="form-check form-switch mb-2">
+          <input class="form-check-input" type="checkbox" id="sound-toggle" checked>
+          <label class="form-check-label small text-light" for="sound-toggle">Web Audio Sound FX</label>
+        </div>
+        <button id="btn-restart" class="btn btn-sm btn-outline-danger w-100 mt-2" onclick="game.init()">
+          <i class="fa-solid fa-rotate-left me-1"></i> Restart Match
+        </button>
+      </div>
+    </div>
+
+    <!-- Middle Column: Strategy Board Canvas -->
+    <div class="col-lg-4 text-center">
+      <div class="game-card p-2">
+        <div class="d-flex justify-content-between align-items-center px-2 py-1 bg-dark rounded mb-2">
+          <span class="fw-bold text-warning small"><i class="fa-solid fa-chess-board me-1"></i> STRATEGY BOARD</span>
+          <span id="board-phase-badge" class="phase-badge bg-warning text-dark">STRATEGY PHASE</span>
+        </div>
+        
+        <!-- Strategy Board Canvas Container -->
+        <div class="canvas-wrapper canvas-wrapper-board">
+          <canvas id="boardCanvas" width="540" height="540"></canvas>
+        </div>
+        <small class="text-muted d-block mt-2">Click a unit to view valid moves (highlighted in green)</small>
+      </div>
+    </div>
+
+    <!-- Right Column: Combat Arena Canvas & Battle Chronicle -->
+    <div class="col-lg-5">
+      <div class="game-card p-2 mb-3">
+        <div class="d-flex justify-content-between align-items-center px-2 py-1 bg-dark rounded mb-2">
+          <span class="fw-bold text-danger small"><i class="fa-solid fa-crosshairs me-1"></i> COMBAT ARENA</span>
+          <span id="arena-status" class="phase-badge bg-secondary text-light">STANDBY</span>
+        </div>
+        
+        <!-- Combat Arena Canvas Container -->
+        <div class="canvas-wrapper canvas-wrapper-arena">
+          <canvas id="arenaCanvas" width="600" height="400"></canvas>
+        </div>
+
+        <!-- Combat HUD Bar -->
+        <div id="combat-hud" class="mt-2 px-2">
+          <div class="row g-2 align-items-center">
+            <div class="col-6 border-end border-secondary pe-2">
+              <div class="d-flex justify-content-between">
+                <small id="combat-p1-name" class="text-warning fw-bold">Light Unit</small>
+                <small id="combat-p1-hp-val" class="text-light">100/100</small>
+              </div>
+              <div class="stat-bar mt-1"><div id="combat-p1-hp-bar" class="stat-fill-hp" style="width: 100%;"></div></div>
+              <div class="stat-bar mt-1"><div id="combat-p1-cd-bar" class="stat-fill-cd" style="width: 0%;"></div></div>
+            </div>
+            <div class="col-6 ps-2 text-end">
+              <div class="d-flex justify-content-between">
+                <small id="combat-p2-hp-val" class="text-light">100/100</small>
+                <small id="combat-p2-name" class="text-danger fw-bold">Dark Unit</small>
+              </div>
+              <div class="stat-bar mt-1"><div id="combat-p2-hp-bar" class="stat-fill-hp" style="width: 100%;"></div></div>
+              <div class="stat-bar mt-1"><div id="combat-p2-cd-bar" class="stat-fill-cd" style="width: 0%;"></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Chronicle & Keyboard Guide -->
+      <div class="game-card p-2">
+        <div class="row g-2">
+          <div class="col-md-7">
+            <h6 class="fw-bold mb-1 text-light small"><i class="fa-solid fa-list-ul me-1"></i>Battle Log</h6>
+            <div id="game-log" class="log-box p-2 rounded">
+              <div class="text-warning">[System] Strategy Board Initialized.</div>
+            </div>
+          </div>
+          <div class="col-md-5 small">
+            <h6 class="fw-bold mb-1 text-success small"><i class="fa-solid fa-keyboard me-1"></i>Arena Controls</h6>
+            <div class="mb-1"><strong class="text-warning">P1 (Light):</strong><br><span class="keycap">W</span><span class="keycap">A</span><span class="keycap">S</span><span class="keycap">D</span> + <span class="keycap">SPACE</span></div>
+            <div><strong class="text-danger">P2 (Dark/AI):</strong><br><span class="keycap">&uarr;</span><span class="keycap">&larr;</span><span class="keycap">&darr;</span><span class="keycap">&rarr;</span> + <span class="keycap">ENTER</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Victory Modal -->
+<div class="modal fade" id="victoryModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content bg-dark text-light border-warning">
+      <div class="modal-header border-secondary">
+        <h5 class="modal-title retro-title text-warning" id="victoryTitle">VICTORY!</h5>
+      </div>
+      <div class="modal-body text-center py-4" id="victoryBody">
+        The Light side has conquered all Ley-lines!
+      </div>
+      <div class="modal-footer border-secondary justify-content-center">
+        <button type="button" class="btn btn-warning text-dark fw-bold px-4" data-bs-dismiss="modal" onclick="game.init()">Play Again</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+// --- AUDIO SYNTHESIZER ---
+class AudioSynth {
+  constructor() { this.ctx = null; this.enabled = true; }
+  init() {
+    if (!this.ctx) {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      this.ctx = new AudioCtx();
+    }
+  }
+  playBeep(freq, duration, type = 'square', volume = 0.1) {
+    if (!this.enabled) return;
+    this.init();
+    try {
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+      gain.gain.setValueAtTime(volume, this.ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + duration);
+      osc.connect(gain); gain.connect(this.ctx.destination);
+      osc.start(); osc.stop(this.ctx.currentTime + duration);
+    } catch(e){}
+  }
+  playMove() { this.playBeep(440, 0.08, 'sine', 0.05); }
+  playAttack() { this.playBeep(220, 0.12, 'sawtooth', 0.1); }
+  playHit() { this.playBeep(120, 0.2, 'square', 0.15); }
+  playSpell() { this.playBeep(600, 0.3, 'triangle', 0.15); }
+  playVictory() {
+    [523, 659, 783, 1046].forEach((freq, idx) => {
+      setTimeout(() => this.playBeep(freq, 0.2, 'triangle', 0.15), idx * 120);
+    });
+  }
+}
+const audio = new AudioSynth();
+
+// --- PIECE DEFINITIONS ---
+const TEAM = { LIGHT: 'light', DARK: 'dark' };
+const ATK_TYPE = { MELEE: 'melee', RANGED: 'ranged' };
+
+const PIECE_TYPES = {
+  // Light Side Units
+  WIZARD:   { name: 'Wizard', side: TEAM.LIGHT, icon: '🧙‍♂️', hp: 90,  speed: 2.8, atk: 25, reload: 40, type: ATK_TYPE.RANGED, projSpeed: 6.5, moveRange: 3 },
+  KNIGHT:   { name: 'Knight', side: TEAM.LIGHT, icon: '🛡️',  hp: 75,  speed: 3.0, atk: 15, reload: 25, type: ATK_TYPE.MELEE,  projSpeed: 0,   moveRange: 3 },
+  ARCHER:   { name: 'Archer', side: TEAM.LIGHT, icon: '🏹',  hp: 60,  speed: 3.2, atk: 18, reload: 30, type: ATK_TYPE.RANGED, projSpeed: 7.5, moveRange: 3 },
+  GOLEM:    { name: 'Golem',  side: TEAM.LIGHT, icon: '🗿',  hp: 130, speed: 2.0, atk: 35, reload: 60, type: ATK_TYPE.MELEE,  projSpeed: 0,   moveRange: 2 },
+  VALKYRIE: { name: 'Valkyrie',side: TEAM.LIGHT,icon: '🧚‍♀️', hp: 85,  speed: 3.5, atk: 22, reload: 35, type: ATK_TYPE.RANGED, projSpeed: 6.0, moveRange: 4 },
+  UNICORN:  { name: 'Unicorn',side: TEAM.LIGHT, icon: '🦄',  hp: 80,  speed: 4.0, atk: 20, reload: 30, type: ATK_TYPE.MELEE,  projSpeed: 0,   moveRange: 4 },
+  PHOENIX:  { name: 'Phoenix',side: TEAM.LIGHT, icon: '🦅',  hp: 100, speed: 3.8, atk: 30, reload: 45, type: ATK_TYPE.RANGED, projSpeed: 7.0, moveRange: 4 },
+
+  // Dark Side Units
+  SORCERESS:{ name: 'Sorceress',side: TEAM.DARK,icon: '🧙‍♀️', hp: 90,  speed: 2.8, atk: 25, reload: 40, type: ATK_TYPE.RANGED, projSpeed: 6.5, moveRange: 3 },
+  GOBLIN:   { name: 'Goblin', side: TEAM.DARK,  icon: '👺',  hp: 60,  speed: 3.4, atk: 14, reload: 22, type: ATK_TYPE.MELEE,  projSpeed: 0,   moveRange: 3 },
+  MANTICORE:{ name: 'Manticore',side: TEAM.DARK,icon: '🦂', hp: 65,  speed: 3.2, atk: 18, reload: 30, type: ATK_TYPE.RANGED, projSpeed: 7.0, moveRange: 3 },
+  TROLL:    { name: 'Troll',  side: TEAM.DARK,  icon: '👹',  hp: 140, speed: 1.8, atk: 38, reload: 65, type: ATK_TYPE.MELEE,  projSpeed: 0,   moveRange: 2 },
+  BANSHEE:  { name: 'Banshee',side: TEAM.DARK,  icon: '👻',  hp: 80,  speed: 3.6, atk: 24, reload: 35, type: ATK_TYPE.RANGED, projSpeed: 5.5, moveRange: 4 },
+  MINOTAUR: { name: 'Minotaur',side: TEAM.DARK, icon: '🐂',  hp: 90,  speed: 3.8, atk: 24, reload: 32, type: ATK_TYPE.MELEE,  projSpeed: 0,   moveRange: 4 },
+  DRAGON:   { name: 'Dragon', side: TEAM.DARK,  icon: '🐉',  hp: 110, speed: 3.6, atk: 32, reload: 50, type: ATK_TYPE.RANGED, projSpeed: 6.8, moveRange: 4 }
+};
+
+// --- MAIN ARCHON ENGINE ---
+class ArchonGame {
+  constructor() {
+    this.boardCanvas = document.getElementById('boardCanvas');
+    this.boardCtx = this.boardCanvas.getContext('2d');
+    
+    this.arenaCanvas = document.getElementById('arenaCanvas');
+    this.arenaCtx = this.arenaCanvas.getContext('2d');
+
+    this.gridSize = 9;
+    this.tileSize = this.boardCanvas.width / this.gridSize;
+
+    this.mode = 'BOARD'; // 'BOARD' or 'COMBAT'
+    this.turn = TEAM.LIGHT;
+    this.turnCycleCount = 1;
+    this.luminanceState = 'NEUTRAL';
+    
+    this.board = Array(9).fill(null).map(() => Array(9).fill(null));
+    this.selectedSquare = null;
+    this.validMoves = [];
+    this.spellMode = null;
+
+    this.powerPoints = [[4, 4], [0, 4], [8, 4], [4, 0], [4, 8]];
+    this.combatState = null;
+    this.keys = {};
+
+    this.initInput();
+  }
+
+  init() {
+    this.mode = 'BOARD';
+    this.turn = TEAM.LIGHT;
+    this.turnCycleCount = 1;
+    this.luminanceState = 'NEUTRAL';
+    this.selectedSquare = null;
+    this.validMoves = [];
+    this.spellMode = null;
+    
+    this.setupBoard();
+    this.updateUI();
+    this.log("Match initialized. Light moves first.", "text-warning");
+    
+    // Explicit render triggers
+    this.renderBoard();
+    this.renderIdleArena();
+  }
+
+  setupBoard() {
+    for(let r=0; r<9; r++) for(let c=0; c<9; c++) this.board[r][c] = null;
+
+    const place = (r, c, typeKey) => {
+      const proto = PIECE_TYPES[typeKey];
+      this.board[r][c] = {
+        ...proto,
+        id: Math.random().toString(36).substr(2, 9),
+        currentHp: proto.hp,
+        r, c
+      };
+    };
+
+    // Light Side Setup
+    place(8, 4, 'WIZARD'); place(8, 0, 'GOLEM'); place(8, 8, 'GOLEM');
+    place(8, 1, 'UNICORN'); place(8, 7, 'UNICORN');
+    place(8, 2, 'VALKYRIE'); place(8, 6, 'VALKYRIE');
+    place(8, 3, 'PHOENIX'); place(8, 5, 'ARCHER');
+    for(let c=0; c<9; c++) place(7, c, 'KNIGHT');
+
+    // Dark Side Setup
+    place(0, 4, 'SORCERESS'); place(0, 0, 'TROLL'); place(0, 8, 'TROLL');
+    place(0, 1, 'MINOTAUR'); place(0, 7, 'MINOTAUR');
+    place(0, 2, 'BANSHEE'); place(0, 6, 'BANSHEE');
+    place(0, 3, 'DRAGON'); place(0, 5, 'MANTICORE');
+    for(let c=0; c<9; c++) place(1, c, 'GOBLIN');
+  }
+
+  initInput() {
+    this.boardCanvas.addEventListener('click', (e) => {
+      if (this.mode !== 'BOARD') return;
+      const rect = this.boardCanvas.getBoundingClientRect();
+      const scaleX = this.boardCanvas.width / rect.width;
+      const scaleY = this.boardCanvas.height / rect.height;
+      const c = Math.floor((e.clientX - rect.left) * scaleX / this.tileSize);
+      const r = Math.floor((e.clientY - rect.top) * scaleY / this.tileSize);
+
+      this.handleBoardClick(r, c);
+    });
+
+    window.addEventListener('keydown', (e) => { this.keys[e.code] = true; });
+    window.addEventListener('keyup', (e) => { this.keys[e.code] = false; });
+  }
+
+  handleBoardClick(r, c) {
+    if (r < 0 || r >= 9 || c < 0 || c >= 9) return;
+    const clickedPiece = this.board[r][c];
+
+    if (this.spellMode) {
+      this.executeSpellTarget(r, c);
+      return;
+    }
+
+    if (clickedPiece && clickedPiece.side === this.turn) {
+      this.selectedSquare = [r, c];
+      this.calculateValidMoves(r, c);
+      audio.playMove();
+      this.renderBoard();
+      return;
+    }
+
+    if (this.selectedSquare) {
+      const [sr, sc] = this.selectedSquare;
+      const isValid = this.validMoves.some(([vr, vc]) => vr === r && vc === c);
+
+      if (isValid) {
+        this.executeMove(sr, sc, r, c);
+      } else {
+        this.selectedSquare = null;
+        this.validMoves = [];
+        this.renderBoard();
+      }
+    }
+  }
+
+  calculateValidMoves(r, c) {
+    const piece = this.board[r][c];
+    this.validMoves = [];
+    const range = piece.moveRange;
+
+    for (let dr = -range; dr <= range; dr++) {
+      for (let dc = -range; dc <= range; dc++) {
+        if (dr === 0 && dc === 0) continue;
+        const tr = r + dr, tc = c + dc;
+        if (tr >= 0 && tr < 9 && tc >= 0 && tc < 9) {
+          if (Math.max(Math.abs(dr), Math.abs(dc)) <= range) {
+            const target = this.board[tr][tc];
+            if (!target || target.side !== piece.side) {
+              this.validMoves.push([tr, tc]);
+            }
+          }
+        }
+      }
+    }
+  }
+
+  executeMove(fromR, fromC, toR, toC) {
+    const attacker = this.board[fromR][fromC];
+    const defender = this.board[toR][toC];
+
+    this.selectedSquare = null;
+    this.validMoves = [];
+
+    if (defender) {
+      this.log(`CLASH! ${attacker.name} challenges ${defender.name}!`, 'text-danger fw-bold');
+      this.startCombat(attacker, defender, toR, toC);
+    } else {
+      this.board[toR][toC] = attacker;
+      attacker.r = toR; attacker.c = toC;
+      this.board[fromR][fromC] = null;
+      audio.playMove();
+      this.log(`${attacker.name} moved to tile (${toR}, ${toC}).`, 'text-light');
+      this.endTurn();
+    }
+  }
+
+  castSpell(spellType) {
+    const casterType = (this.turn === TEAM.LIGHT) ? 'WIZARD' : 'SORCERESS';
+    let casterFound = false;
+
+    for (let r=0; r<9; r++) {
+      for (let c=0; c<9; c++) {
+        if (this.board[r][c] && this.board[r][c].name === PIECE_TYPES[casterType].name && this.board[r][c].side === this.turn) {
+          casterFound = true;
+        }
+      }
+    }
+
+    if (!casterFound) {
+      this.log(`Cannot cast! Your primary caster is defeated.`, 'text-danger');
+      return;
+    }
+
+    this.spellMode = spellType;
+    this.log(`Select a target on board for ${spellType}...`, 'text-info fw-bold');
+  }
+
+  executeSpellTarget(r, c) {
+    const target = this.board[r][c];
+    audio.playSpell();
+
+    if (this.spellMode === 'HEAL' && target && target.side === this.turn) {
+      target.currentHp = target.hp;
+      this.log(`HEAL spell fully restored ${target.name}!`, 'text-success');
+    } else if (this.spellMode === 'TELEPORT' && this.selectedSquare && !target) {
+      const [sr, sc] = this.selectedSquare;
+      const piece = this.board[sr][sc];
+      this.board[r][c] = piece;
+      piece.r = r; piece.c = c;
+      this.board[sr][sc] = null;
+      this.log(`Teleported ${piece.name} to (${r}, ${c})!`, 'text-info');
+    } else if (this.spellMode === 'SUMMON' && !target) {
+      const proto = (this.turn === TEAM.LIGHT) ? PIECE_TYPES.VALKYRIE : PIECE_TYPES.BANSHEE;
+      this.board[r][c] = { ...proto, id: Math.random().toString(36).substr(2,9), currentHp: proto.hp, r, c };
+      this.log(`Summoned Elemental at tile (${r}, ${c})!`, 'text-info');
+    }
+
+    this.spellMode = null;
+    this.selectedSquare = null;
+    this.endTurn();
+  }
+
+  endTurn() {
+    this.checkWinConditions();
+
+    this.turn = (this.turn === TEAM.LIGHT) ? TEAM.DARK : TEAM.LIGHT;
+    this.turnCycleCount++;
+
+    const cyclePhase = Math.floor((this.turnCycleCount % 9) / 3);
+    this.luminanceState = (cyclePhase === 0) ? 'NEUTRAL' : (cyclePhase === 1 ? 'LIGHT' : 'DARK');
+
+    this.updateUI();
+    this.renderBoard();
+
+    if (this.turn === TEAM.DARK && document.getElementById('ai-toggle').checked) {
+      setTimeout(() => this.makeAIMove(), 600);
+    }
+  }
+
+  getSquareColorType(r, c) {
+    if (r === 4 && c === 4) return 'POWER';
+    const isDynamic = (r + c) % 2 === 1;
+    if (!isDynamic) return (r % 2 === 0) ? 'LIGHT' : 'DARK';
+    return this.luminanceState;
+  }
+
+  // --- COMBAT ARENA ---
+  startCombat(p1, p2, tileR, tileC) {
+    this.mode = 'COMBAT';
+    
+    const arenaStatus = document.getElementById('arena-status');
+    arenaStatus.textContent = "IN COMBAT";
+    arenaStatus.className = "phase-badge bg-danger text-light";
+
+    const tileType = this.getSquareColorType(tileR, tileC);
+    let p1Bonus = (p1.side === TEAM.LIGHT && tileType === 'LIGHT') || (p1.side === TEAM.DARK && tileType === 'DARK') ? 30 : 0;
+    let p2Bonus = (p2.side === TEAM.LIGHT && tileType === 'LIGHT') || (p2.side === TEAM.DARK && tileType === 'DARK') ? 30 : 0;
+
+    const obstacles = [];
+    for(let i=0; i<6; i++) {
+      obstacles.push({ x: 100 + Math.random() * 400, y: 60 + Math.random() * 280, r: 16 + Math.random() * 14 });
+    }
+
+    this.combatState = {
+      tileR, tileC,
+      p1: { ...p1, x: 80, y: 200, vx: 0, vy: 0, radius: 15, maxHp: p1.hp + p1Bonus, currentHp: Math.min(p1.currentHp + p1Bonus, p1.hp + p1Bonus), cooldown: 0, color: '#f1c40f' },
+      p2: { ...p2, x: 520, y: 200, vx: 0, vy: 0, radius: 15, maxHp: p2.hp + p2Bonus, currentHp: Math.min(p2.currentHp + p2Bonus, p2.hp + p2Bonus), cooldown: 0, color: '#9b59b6' },
+      projectiles: [], obstacles, winner: null
+    };
+
+    this.updateCombatHUD();
+    requestAnimationFrame(() => this.combatLoop());
+  }
+
+  combatLoop() {
+    if (this.mode !== 'COMBAT') return;
+
+    this.updateCombatLogic();
+    this.renderCombat();
+
+    if (!this.combatState.winner) {
+      requestAnimationFrame(() => this.combatLoop());
+    } else {
+      setTimeout(() => this.resolveCombat(), 700);
+    }
+  }
+
+  updateCombatLogic() {
+    const cs = this.combatState;
+    const p1 = cs.p1, p2 = cs.p2;
+
+    if (p1.cooldown > 0) p1.cooldown--;
+    if (p2.cooldown > 0) p2.cooldown--;
+
+    // P1 Controls (WASD + Space)
+    p1.vx = 0; p1.vy = 0;
+    if (this.keys['KeyW']) p1.vy = -p1.speed;
+    if (this.keys['KeyS']) p1.vy = p1.speed;
+    if (this.keys['KeyA']) p1.vx = -p1.speed;
+    if (this.keys['KeyD']) p1.vx = p1.speed;
+    if (this.keys['Space'] && p1.cooldown <= 0) { this.fireAttack(p1, p2); p1.cooldown = p1.reload; }
+
+    // P2 Controls (Arrow Keys + Enter OR AI)
+    const isAI = (p2.side === TEAM.DARK && document.getElementById('ai-toggle').checked);
+    if (isAI) {
+      this.updateCombatAI(p2, p1);
+    } else {
+      p2.vx = 0; p2.vy = 0;
+      if (this.keys['ArrowUp']) p2.vy = -p2.speed;
+      if (this.keys['ArrowDown']) p2.vy = p2.speed;
+      if (this.keys['ArrowLeft']) p2.vx = -p2.speed;
+      if (this.keys['ArrowRight']) p2.vx = p2.speed;
+      if (this.keys['Enter'] && p2.cooldown <= 0) { this.fireAttack(p2, p1); p2.cooldown = p2.reload; }
+    }
+
+    [p1, p2].forEach(p => {
+      p.x = Math.max(p.radius, Math.min(this.arenaCanvas.width - p.radius, p.x + p.vx));
+      p.y = Math.max(p.radius, Math.min(this.arenaCanvas.height - p.radius, p.y + p.vy));
+
+      cs.obstacles.forEach(obs => {
+        const dx = p.x - obs.x, dy = p.y - obs.y, dist = Math.hypot(dx, dy);
+        if (dist < p.radius + obs.r) {
+          const overlap = (p.radius + obs.r) - dist;
+          p.x += (dx / dist) * overlap; p.y += (dy / dist) * overlap;
+        }
+      });
+    });
+
+    for (let i = cs.projectiles.length - 1; i >= 0; i--) {
+      const proj = cs.projectiles[i];
+      proj.x += proj.vx; proj.y += proj.vy; proj.life--;
+
+      const target = (proj.owner === p1) ? p2 : p1;
+      if (Math.hypot(proj.x - target.x, proj.y - target.y) < target.radius + proj.radius) {
+        target.currentHp -= proj.damage;
+        audio.playHit();
+        cs.projectiles.splice(i, 1);
+        this.updateCombatHUD();
+        if (target.currentHp <= 0) cs.winner = proj.owner;
+        continue;
+      }
+
+      let hitObs = cs.obstacles.some(obs => Math.hypot(proj.x - obs.x, proj.y - obs.y) < obs.r);
+      if (hitObs || proj.life <= 0) cs.projectiles.splice(i, 1);
+    }
+
+    if (p1.currentHp <= 0) cs.winner = p2;
+    if (p2.currentHp <= 0) cs.winner = p1;
+  }
+
+  updateCombatAI(ai, target) {
+    const dx = target.x - ai.x, dy = target.y - ai.y, dist = Math.hypot(dx, dy);
+    ai.vx = (dx / dist) * ai.speed; ai.vy = (dy / dist) * ai.speed;
+
+    if (ai.cooldown <= 0 && dist < 320) {
+      this.fireAttack(ai, target);
+      ai.cooldown = ai.reload;
+    }
+  }
+
+  fireAttack(attacker, target) {
+    audio.playAttack();
+    const angle = Math.atan2(target.y - attacker.y, target.x - attacker.x);
+    if (attacker.type === ATK_TYPE.MELEE) {
+      this.combatState.projectiles.push({
+        x: attacker.x + Math.cos(angle) * 22, y: attacker.y + Math.sin(angle) * 22,
+        vx: Math.cos(angle) * 4, vy: Math.sin(angle) * 4, radius: 12, damage: attacker.atk, owner: attacker, life: 6, color: '#f39c12'
+      });
+    } else {
+      this.combatState.projectiles.push({
+        x: attacker.x, y: attacker.y, vx: Math.cos(angle) * attacker.projSpeed, vy: Math.sin(angle) * attacker.projSpeed,
+        radius: 6, damage: attacker.atk, owner: attacker, life: 90, color: attacker.side === TEAM.LIGHT ? '#00f0ff' : '#e74c3c'
+      });
+    }
+  }
+
+  updateCombatHUD() {
+    const cs = this.combatState;
+    if (!cs) return;
+
+    document.getElementById('combat-p1-name').textContent = `${cs.p1.icon} ${cs.p1.name}`;
+    document.getElementById('combat-p1-hp-val').textContent = `${Math.ceil(cs.p1.currentHp)}/${cs.p1.maxHp}`;
+    document.getElementById('combat-p1-hp-bar').style.width = `${Math.max(0, (cs.p1.currentHp / cs.p1.maxHp) * 100)}%`;
+    document.getElementById('combat-p1-cd-bar').style.width = `${((cs.p1.reload - cs.p1.cooldown) / cs.p1.reload) * 100}%`;
+
+    document.getElementById('combat-p2-name').textContent = `${cs.p2.icon} ${cs.p2.name}`;
+    document.getElementById('combat-p2-hp-val').textContent = `${Math.ceil(cs.p2.currentHp)}/${cs.p2.maxHp}`;
+    document.getElementById('combat-p2-hp-bar').style.width = `${Math.max(0, (cs.p2.currentHp / cs.p2.maxHp) * 100)}%`;
+    document.getElementById('combat-p2-cd-bar').style.width = `${((cs.p2.reload - cs.p2.cooldown) / cs.p2.reload) * 100}%`;
+  }
+
+  resolveCombat() {
+    const cs = this.combatState;
+    const winner = cs.winner;
+    const loser = (winner === cs.p1) ? cs.p2 : cs.p1;
+
+    this.log(`ARENA RESULT: ${winner.name} defeated ${loser.name}!`, winner.side === TEAM.LIGHT ? 'text-warning' : 'text-danger');
+
+    const hpRatio = winner.currentHp / winner.maxHp;
+    winner.currentHp = Math.max(10, Math.round(winner.hp * hpRatio));
+
+    this.board[cs.tileR][cs.tileC] = winner;
+    winner.r = cs.tileR; winner.c = cs.tileC;
+
+    for (let r=0; r<9; r++) {
+      for (let c=0; c<9; c++) {
+        if (this.board[r][c] && this.board[r][c].id === winner.id && (r !== cs.tileR || c !== cs.tileC)) {
+          this.board[r][c] = null;
+        }
+      }
+    }
+
+    this.mode = 'BOARD';
+    const arenaStatus = document.getElementById('arena-status');
+    arenaStatus.textContent = "STANDBY";
+    arenaStatus.className = "phase-badge bg-secondary text-light";
+
+    this.renderIdleArena();
+    this.endTurn();
+  }
+
+  makeAIMove() {
+    const darkPieces = [];
+    for (let r=0; r<9; r++) {
+      for (let c=0; c<9; c++) {
+        if (this.board[r][c] && this.board[r][c].side === TEAM.DARK) darkPieces.push(this.board[r][c]);
+      }
+    }
+
+    if (darkPieces.length === 0) return;
+    darkPieces.sort(() => Math.random() - 0.5);
+
+    for (const p of darkPieces) {
+      this.calculateValidMoves(p.r, p.c);
+      if (this.validMoves.length > 0) {
+        const attackMove = this.validMoves.find(([vr, vc]) => this.board[vr][vc] && this.board[vr][vc].side === TEAM.LIGHT);
+        const move = attackMove || this.validMoves[Math.floor(Math.random() * this.validMoves.length)];
+        this.executeMove(p.r, p.c, move[0], move[1]);
+        break;
+      }
+    }
+  }
+
+  checkWinConditions() {
+    let lightUnits = 0, darkUnits = 0, lightPP = 0, darkPP = 0;
+
+    for (let r=0; r<9; r++) {
+      for (let c=0; c<9; c++) {
+        const p = this.board[r][c];
+        if (p) {
+          if (p.side === TEAM.LIGHT) lightUnits++;
+          if (p.side === TEAM.DARK) darkUnits++;
+        }
+        if (this.powerPoints.some(([pr, pc]) => pr === r && pc === c) && p) {
+          if (p.side === TEAM.LIGHT) lightPP++;
+          if (p.side === TEAM.DARK) darkPP++;
+        }
+      }
+    }
+
+    document.getElementById('light-pp-count').textContent = lightPP;
+    document.getElementById('dark-pp-count').textContent = darkPP;
+
+    let victor = null, reason = "";
+    if (lightUnits === 0) { victor = TEAM.DARK; reason = "All Light units defeated!"; }
+    else if (darkUnits === 0) { victor = TEAM.LIGHT; reason = "All Dark units defeated!"; }
+    else if (lightPP === 5) { victor = TEAM.LIGHT; reason = "Light side controls all 5 Power Points!"; }
+    else if (darkPP === 5) { victor = TEAM.DARK; reason = "Dark side controls all 5 Power Points!"; }
+
+    if (victor) {
+      audio.playVictory();
+      const modal = new bootstrap.Modal(document.getElementById('victoryModal'));
+      document.getElementById('victoryTitle').textContent = `${victor.toUpperCase()} VICTORY!`;
+      document.getElementById('victoryBody').textContent = reason;
+      modal.show();
+    }
+  }
+
+  // --- GUARANTEED RENDERING PIPELINE ---
+  renderBoard() {
+    const ctx = this.boardCtx;
+    ctx.clearRect(0, 0, this.boardCanvas.width, this.boardCanvas.height);
+
+    for (let r = 0; r < 9; r++) {
+      for (let c = 0; c < 9; c++) {
+        const x = c * this.tileSize, y = r * this.tileSize;
+        const colorType = this.getSquareColorType(r, c);
+
+        ctx.fillStyle = (colorType === 'LIGHT') ? '#d8ceab' : (colorType === 'DARK') ? '#2a1a38' : (colorType === 'POWER') ? '#d39e00' : '#555b6e';
+        ctx.fillRect(x, y, this.tileSize, this.tileSize);
+
+        ctx.strokeStyle = '#111'; ctx.lineWidth = 1;
+        ctx.strokeRect(x, y, this.tileSize, this.tileSize);
+
+        // Power Point Indicator
+        if (this.powerPoints.some(([pr, pc]) => pr === r && pc === c)) {
+          ctx.strokeStyle = '#00f0ff'; ctx.lineWidth = 3;
+          ctx.strokeRect(x + 4, y + 4, this.tileSize - 8, this.tileSize - 8);
+        }
+
+        // Selection highlight
+        if (this.selectedSquare && this.selectedSquare[0] === r && this.selectedSquare[1] === c) {
+          ctx.fillStyle = 'rgba(255, 242, 0, 0.45)';
+          ctx.fillRect(x, y, this.tileSize, this.tileSize);
+        }
+
+        // Valid move indicator
+        if (this.validMoves.some(([vr, vc]) => vr === r && vc === c)) {
+          ctx.fillStyle = 'rgba(46, 204, 113, 0.5)';
+          ctx.beginPath(); ctx.arc(x + this.tileSize/2, y + this.tileSize/2, this.tileSize/5, 0, Math.PI * 2); ctx.fill();
+        }
+
+        const piece = this.board[r][c];
+        if (piece) {
+          ctx.font = '26px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+          ctx.fillText(piece.icon, x + this.tileSize / 2, y + this.tileSize / 2 - 2);
+
+          const hpPct = Math.max(0, piece.currentHp / piece.hp);
+          ctx.fillStyle = '#000'; ctx.fillRect(x + 6, y + this.tileSize - 8, this.tileSize - 12, 4);
+          ctx.fillStyle = piece.side === TEAM.LIGHT ? '#2ecc71' : '#e74c3c';
+          ctx.fillRect(x + 6, y + this.tileSize - 8, (this.tileSize - 12) * hpPct, 4);
+        }
+      }
+    }
+  }
+
+  renderIdleArena() {
+    const ctx = this.arenaCtx;
+    ctx.fillStyle = '#0d0f18';
+    ctx.fillRect(0, 0, this.arenaCanvas.width, this.arenaCanvas.height);
+    
+    ctx.font = 'bold 16px Rajdhani'; ctx.fillStyle = '#6c757d'; ctx.textAlign = 'center';
+    ctx.fillText("COMBAT ARENA STANDBY", this.arenaCanvas.width / 2, this.arenaCanvas.height / 2 - 10);
+    ctx.font = '13px Rajdhani';
+    ctx.fillText("Move an attacking piece onto an enemy tile to engage real-time battle", this.arenaCanvas.width / 2, this.arenaCanvas.height / 2 + 15);
+  }
+
+  renderCombat() {
+    const ctx = this.arenaCtx;
+    const cs = this.combatState;
+    ctx.clearRect(0, 0, this.arenaCanvas.width, this.arenaCanvas.height);
+
+    const tileType = this.getSquareColorType(cs.tileR, cs.tileC);
+    ctx.fillStyle = (tileType === 'LIGHT') ? '#332e22' : (tileType === 'DARK') ? '#1e1029' : '#141722';
+    ctx.fillRect(0, 0, this.arenaCanvas.width, this.arenaCanvas.height);
+
+    ctx.fillStyle = '#4a5168';
+    cs.obstacles.forEach(obs => {
+      ctx.beginPath(); ctx.arc(obs.x, obs.y, obs.r, 0, Math.PI * 2); ctx.fill();
+    });
+
+    cs.projectiles.forEach(p => {
+      ctx.fillStyle = p.color; ctx.beginPath(); ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2); ctx.fill();
+    });
+
+    [cs.p1, cs.p2].forEach(p => {
+      ctx.fillStyle = p.color; ctx.beginPath(); ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.stroke();
+      ctx.font = '16px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText(p.icon, p.x, p.y);
+    });
+  }
+
+  updateUI() {
+    const turnElem = document.getElementById('turn-indicator');
+    turnElem.textContent = `${this.turn.toUpperCase()} SIDE TURN`;
+    turnElem.className = (this.turn === TEAM.LIGHT) ? "badge badge-light-side p-2 w-100 fs-6 mb-2" : "badge badge-dark-side p-2 w-100 fs-6 mb-2";
+    document.getElementById('cycle-state').textContent = `${this.luminanceState} (Turn ${this.turnCycleCount})`;
+  }
+
+  log(msg, cssClass = 'text-light') {
+    const logBox = document.getElementById('game-log');
+    const entry = document.createElement('div');
+    entry.className = `mb-1 ${cssClass}`;
+    entry.textContent = `[T${this.turnCycleCount}] ${msg}`;
+    logBox.appendChild(entry);
+    logBox.scrollTop = logBox.scrollHeight;
+  }
+}
+
+let game;
+window.onload = () => {
+  game = new ArchonGame();
+  game.init();
+
+  document.getElementById('sound-toggle').addEventListener('change', (e) => { audio.enabled = e.target.checked; });
+};
+</script>
+</body>
+</html>
